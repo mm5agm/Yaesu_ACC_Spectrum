@@ -1,0 +1,9 @@
+build/
+.pio/
+sdkconfig
+sdkconfig.old
+managed_components/
+__pycache__/
+*.pyc
+.vscode/
+*.log
