@@ -115,7 +115,11 @@ first.
   the one marked UART.
 - Its RGB LED is on GPIO48, found with the paddle firmware's `ledscan` command (see
   `core/firmware/paddle-adapter` in YWC). So GPIO38 is free for the heartbeat. Version
-  1.1 of the DevKitC-1 has the LED on GPIO38, so another board may differ.
+  1.1 of the DevKitC-1 has the LED on GPIO38, so another board may differ. It's an
+  addressable RGB LED in GRB order, so it takes a data stream, not a plain high or low.
+  The paddle firmware drives it with the Adafruit NeoPixel library, because the core's
+  `neopixelWrite()` only ever drives the first pin it was called with, which defeated
+  the scan. Firmware here that wants the LED can do the same.
 - The UART socket is the board's CH343 port, COM5 on this PC. Flashing tools are pinned
   to the board's port by name, because COM3 and COM4 are the radio's.
 
