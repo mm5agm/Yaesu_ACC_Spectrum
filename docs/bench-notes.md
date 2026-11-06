@@ -17,17 +17,17 @@ Metered from the cable's male plug to each wire of the Icom lead:
 | Pin | Wire colour | Continuity OK |
 |---|---|---|
 | 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
+| 2 | Red | Yes, 2026-11-06 |
+| 3 | Orange | Yes, 2026-11-06 |
+| 4 | Yellow | Yes, 2026-11-06 |
+| 5 | Green | Yes, 2026-11-06 |
+| 6 | Blue | Yes, 2026-11-06 |
 | 7 | | |
 | 8 | | |
 | 9 | | |
 | 10 | | |
-| 11 | | |
-| 12 | | |
+| 11 | Pink | Yes, 2026-11-06 |
+| 12 | Light blue | Yes, 2026-11-06 |
 | 13 | | |
 
 ## Board
