@@ -109,7 +109,7 @@
 <text x="582" y="478" font-size="13" fill="#111">CNT TX</text>
 <rect x="732" y="466" width="16" height="16" fill="#8FD3F4" stroke="#333"/>
 <text x="754" y="478" font-size="13" fill="#111">Light blue</text>
-<text x="840" y="478" font-size="13" fill="#111">ESP32 GPIO38 (check LED)</text>
+<text x="840" y="478" font-size="13" fill="#111">ESP32 GPIO38</text>
 <text x="548" y="510" font-size="14" font-weight="bold">13</text>
 <text x="582" y="510" font-size="13" fill="#111">Reserve (ground)</text>
 <rect x="732" y="498" width="16" height="16" fill="#B5E48C" stroke="#333"/>

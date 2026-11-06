@@ -107,15 +107,17 @@ ground. ESP32 GND and the scope ground go only to the red wire, which is worth m
 as GND with a label or a band of tape. Blue and light blue are different signals, and so
 are green and light green.
 
-**The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, Amazon UK B0F8N8LZ4G),
-the one from the paddle work. Anything still wired to it from that work comes off
+**The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, marked HW678, Amazon UK
+B0F8N8LZ4G), the one from the paddle work. Anything still wired to it from that work comes off
 first.
 
 - It normally has two USB sockets. Use the one marked USB, the S3's native USB, not
   the one marked UART.
-- On version 1.1 of the DevKitC-1, GPIO38 drives the on-board RGB LED; on version 1.0
-  the LED is on GPIO48. Clone boards vary, so check this one before using GPIO38 for
-  the heartbeat.
+- Its RGB LED is on GPIO48, found with the paddle firmware's `ledscan` command (see
+  `core/firmware/paddle-adapter` in YWC). So GPIO38 is free for the heartbeat. Version
+  1.1 of the DevKitC-1 has the LED on GPIO38, so another board may differ.
+- The UART socket is the board's CH343 port, COM5 on this PC. Flashing tools are pinned
+  to the board's port by name, because COM3 and COM4 are the radio's.
 
 ## Pins we need
 
@@ -151,8 +153,8 @@ None of them reaches the breakout, and they aren't probed.
 ## Wiring to the ESP32-S3
 
 This is the pin mapping SLTPLAN's firmware uses, so their code runs
-unchanged. Our own firmware can route these signals to other pins, so GPIO38 can
-move if the board's LED is on it.
+unchanged. On a board with its LED on GPIO38, our own firmware can move that signal
+to another pin.
 
 | ACC pin | Manual label | Function | ESP32-S3 | Role on the ESP32 |
 |---|---|---|---|---|
@@ -174,7 +176,7 @@ Notes:
 
 - Check that GPIO10, 11, 13, 14, 38 and 39 are broken out on the board.
   The N16R8's octal PSRAM takes GPIO35–37, but the pins above don't use those.
-  GPIO38 may be the RGB LED; see "The cable and the board".
+  This board's RGB LED is on GPIO48, which isn't used here.
 - Put a 330 Ω resistor in series with each line from the radio (pins 3, 4,
   5, 6, 12). It limits the current if the levels turn out higher than
   expected or a wire goes to the wrong pin, and does no harm at 2 MHz. It
@@ -282,8 +284,7 @@ Rules for our own firmware:
    radio.
 2. **Levels.** Scope checks as above, nothing connected to the ESP32.
 3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
-   wire it as in the table, and read frames with `remote.py` over USB. Their
-   firmware is fixed on GPIO38, so check the LED first.
+   wire it as in the table, and read frames with `remote.py` over USB.
    Confirm 25 frames a second and a waterfall that follows the radio.
 4. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
    (bit-inverted, they're in wfview's format), 850–1699 the Sub

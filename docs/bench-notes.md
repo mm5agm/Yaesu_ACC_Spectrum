@@ -36,8 +36,8 @@ ESP32-S3 DevKitC-1 N16R8 (Amazon UK B0F8N8LZ4G).
 
 | Check | Result |
 |---|---|
-| Board version marked | |
-| Pin that drives the RGB LED | |
+| Board marked | HW678 |
+| Pin that drives the RGB LED | GPIO48, found during the paddle work with `ledscan` |
 | Paddle wiring removed | |
 
 ## Pin 8 check
