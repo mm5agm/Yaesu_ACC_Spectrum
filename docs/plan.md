@@ -108,28 +108,28 @@ first.
 
 Seven of the 13: pins 2, 4, 5, 6, 11 and 12, plus pin 3 for probing.
 
-| ACC pin | Manual label | Function | Direction | Why |
-|---|---|---|---|---|
-| 2 | GND | Signal ground | — | Common ground with the ESP32 |
-| 3 | DATA1 | SPI data line 1 | to be confirmed | **Scope only at first.** Nothing drives it |
-| 4 | DATA2 | SPI data line 2 | radio → ESP32 | The scope frames |
-| 5 | CLOCK | SPI clock | radio → ESP32 | 2 MHz clock for the data |
-| 6 | CS | SPI chip select | radio → ESP32 | Low for each 4096-byte frame |
-| 11 | CNT RX | Control serial into the radio | ESP32 → radio | Heartbeat reply |
-| 12 | CNT TX | Control serial out of the radio | radio → ESP32 | Heartbeat, `alive\0` once a second |
+| ACC pin | Manual label | Icom wire | Function | Direction | Why |
+|---|---|---|---|---|---|
+| 2 | GND | **Red** | Signal ground | — | Common ground with the ESP32 |
+| 3 | DATA1 | Orange | SPI data line 1 | to be confirmed | **Scope only at first.** Nothing drives it |
+| 4 | DATA2 | Yellow | SPI data line 2 | radio → ESP32 | The scope frames |
+| 5 | CLOCK | Green | SPI clock | radio → ESP32 | 2 MHz clock for the data |
+| 6 | CS | Blue | SPI chip select | radio → ESP32 | Low for each 4096-byte frame |
+| 11 | CNT RX | Pink | Control serial into the radio | ESP32 → radio | Heartbeat reply |
+| 12 | CNT TX | Light blue | Control serial out of the radio | radio → ESP32 | Heartbeat, `alive\0` once a second |
 
 ## Pins to leave unconnected
 
 The other six.
 
-| ACC pin | Manual label | Function | Why not |
-|---|---|---|---|
-| 1 | Power ON | Remote power-on line | Switches the radio on; not needed |
-| 7 | 3.3V | 3.3 V through 1k | It can't power anything |
-| 8 | 13.8V | 13.8 V through F1003 | A short blows the fuse, and a touch on a data pin could damage the radio's logic |
-| 9 | Reserve | `ACC_PTT` | The radio's PTT line |
-| 10 | Reserve | `ACC_SEND` | The radio's SEND line |
-| 13 | Reserve | Ground | Pin 2 is the ground we use |
+| ACC pin | Manual label | Icom wire | Function | Why not |
+|---|---|---|---|---|
+| 1 | Power ON | Brown | Remote power-on line | Switches the radio on; not needed |
+| 7 | 3.3V | Purple | 3.3 V through 1k | It can't power anything |
+| 8 | 13.8V | **Gray** | 13.8 V through F1003 | A short blows the fuse, and a touch on a data pin could damage the radio's logic |
+| 9 | Reserve | White | `ACC_PTT` | The radio's PTT line |
+| 10 | Reserve | **Black** | `ACC_SEND` | The radio's SEND line |
+| 13 | Reserve | Light green | Ground | Pin 2 is the ground we use |
 
 Insulate each of these wires on its own (heat-shrink, not just tape round the
 bundle), with the ends staggered, so none can touch another wire or the ESP32.
