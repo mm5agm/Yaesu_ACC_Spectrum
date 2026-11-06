@@ -91,8 +91,16 @@ before use and recorded in [bench-notes.md](bench-notes.md).
 | 12 | Light blue | CNT TX | Heartbeat |
 | 13 | Light green | Reserve (ground) | **Insulate** |
 
-Red is ground, gray is 13.8 V and black is SEND, not ground. Blue and light blue are
-different signals, and so are green and light green.
+**Why ground is red.** The colours appear to follow the resistor colour code by pin
+number, not by what the wire does: 1 brown, 2 red, 3 orange, 4 yellow, 5 green, 6 blue,
+7 purple, 8 gray, 9 white and 10 black (0 in the code). Pink, light blue and light green
+then cover pins 11 to 13. Icom's manual doesn't give this reason, but the match is
+exact. It means anyone who knows the code can read a wire's pin number from its colour.
+
+So the usual meanings don't apply: red is ground, gray is 13.8 V and black is SEND, not
+ground. ESP32 GND and the scope ground go only to the red wire, which is worth marking
+as GND with a label or a band of tape. Blue and light blue are different signals, and so
+are green and light green.
 
 **The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, Amazon UK B0F8N8LZ4G),
 the one from the paddle work. Anything still wired to it from that work comes off
