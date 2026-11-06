@@ -1,7 +1,7 @@
 # FTdx101MP: spectrum data from the ACC socket via an ESP32-S3
 
-Status: **draft plan, nothing built.** The cable (13-pin mini-DIN male to
-female, Amazon UK B0BRQDDTTZ) is being ordered.
+Status: **draft plan, nothing built.** The cable has arrived and the board is
+chosen. See "The cable and the board".
 
 ## What it is
 
@@ -53,6 +53,54 @@ bottom by the key. The manual's drawing shows the socket on the radio. That
 is the same view as the female end of the extension cable; looking into the
 male plug, the layout is mirrored left to right.
 
+## The cable and the board
+
+**The cable isn't cut.** The first idea was to cut the extension cable (13-pin
+mini-DIN male to female, Amazon UK B0BRQDDTTZ, £18.99) and use its wires. A
+ready-made 13-pin plug with wires attached was available instead, from the
+IC-7300MK2, so that plug goes into the cable's female end and its wires are the
+ones used. This makes it easier to plug the board into the circuit and unplug it.
+
+```
+Radio ACC socket <- cable male | cable female <- IC-7300MK2 plug -> wires -> breakout
+```
+
+All 13 pins of the extension cable are confirmed wired.
+
+Icom and Yaesu number the socket the same way. Icom's drawing (IC-7300MK2 Basic
+Manual, page 74) is just upside down, with the key at the bottom. The colours below
+are from that page and refer to Icom's supplied cable, so they're to be metered
+before use and recorded in [bench-notes.md](bench-notes.md).
+
+| Pin | Icom wire colour | FTdx101 label | This project |
+|---|---|---|---|
+| 1 | Brown | Power ON | **Insulate** |
+| 2 | **Red** | GND | ESP32 GND, scope ground |
+| 3 | Orange | DATA1 | Scope only at first |
+| 4 | Yellow | DATA2 | Scope frames |
+| 5 | Green | CLOCK | SPI clock |
+| 6 | Blue | CS | SPI chip select |
+| 7 | Purple | 3.3V | **Insulate** |
+| 8 | **Gray** | 13.8V | **Insulate. The dangerous wire** |
+| 9 | White | Reserve (`ACC_PTT`) | **Insulate, not probed** |
+| 10 | **Black** | Reserve (`ACC_SEND`) | **Insulate, not probed** |
+| 11 | Pink | CNT RX | Heartbeat reply |
+| 12 | Light blue | CNT TX | Heartbeat |
+| 13 | Light green | Reserve (ground) | **Insulate** |
+
+Red is ground, gray is 13.8 V and black is SEND, not ground. Blue and light blue are
+different signals, and so are green and light green.
+
+**The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, Amazon UK B0F8N8LZ4G),
+the one from the paddle work. Anything still wired to it from that work comes off
+first.
+
+- It normally has two USB sockets. Use the one marked USB, the S3's native USB, not
+  the one marked UART.
+- On version 1.1 of the DevKitC-1, GPIO38 drives the on-board RGB LED; on version 1.0
+  the LED is on GPIO48. Clone boards vary, so check this one before using GPIO38 for
+  the heartbeat.
+
 ## Pins we need
 
 Seven of the 13: pins 2, 4, 5, 6, 11 and 12, plus pin 3 for probing.
@@ -80,14 +128,15 @@ The other six.
 | 10 | Reserve | `ACC_SEND` | The radio's SEND line |
 | 13 | Reserve | Ground | Pin 2 is the ground we use |
 
-Cut each of these wires back to a different length and insulate it on its own
-(heat-shrink, not just tape round the bundle), so none can touch another wire
-or the ESP32. None of them reaches the breakout, and they aren't probed.
+Insulate each of these wires on its own (heat-shrink, not just tape round the
+bundle), with the ends staggered, so none can touch another wire or the ESP32.
+None of them reaches the breakout, and they aren't probed.
 
 ## Wiring to the ESP32-S3
 
 This is the pin mapping SLTPLAN's firmware uses, so their code runs
-unchanged.
+unchanged. Our own firmware can route these signals to other pins, so GPIO38 can
+move if the board's LED is on it.
 
 | ACC pin | Manual label | Function | ESP32-S3 | Role on the ESP32 |
 |---|---|---|---|---|
@@ -108,8 +157,8 @@ unchanged.
 Notes:
 
 - Check that GPIO10, 11, 13, 14, 38 and 39 are broken out on the board.
-  On boards with octal PSRAM (N8R8, N16R8), GPIO35–37 are taken but the
-  pins above are free.
+  The N16R8's octal PSRAM takes GPIO35–37, but the pins above don't use those.
+  GPIO38 may be the RGB LED; see "The cable and the board".
 - Put a 330 Ω resistor in series with each line from the radio (pins 3, 4,
   5, 6, 12). It limits the current if the levels turn out higher than
   expected or a wire goes to the wrong pin, and does no harm at 2 MHz. It
@@ -119,8 +168,8 @@ Notes:
 
 ## Before connecting the ESP32: check the levels
 
-The ESP32-S3 takes 3.3 V at most on any pin. With the cable wired to a
-breakout but nothing else attached, and the Siglent scope's ground on pin 2.
+The ESP32-S3 takes 3.3 V at most on any pin. With the Icom plug's wires taken
+to a breakout but nothing else attached, and the Siglent scope's ground on pin 2.
 The supply is off whenever the cable is plugged or unplugged, and pin 8 has been
 metered open to every other pin and the shell, as in [fuse-risk.md](fuse-risk.md):
 
@@ -209,15 +258,16 @@ Rules for our own firmware:
 
 ## Steps
 
-1. **Cable.** Check the male plug fits the ACC socket before cutting. Cut
-   near the female end. Use the female end as a test socket and make a
-   table of wire colour to pin number with a meter. Cheap cables sometimes
-   leave pins unconnected, so check all 13. Then cut and insulate pins 1, 7,
-   8, 9, 10 and 13, and meter pin 8 open to everything before the plug goes
-   near the radio.
+1. **Cable.** Don't cut it. Check the male plug fits the ACC socket with the
+   supply off. Plug the IC-7300MK2 plug into the female end, and meter each
+   wire back to the matching pin on the male plug. That confirms Icom's colours
+   and the cable's pin-for-pin wiring together. Then insulate pins 1, 7, 8, 9,
+   10 and 13, and meter pin 8 open to everything before the plug goes near the
+   radio.
 2. **Levels.** Scope checks as above, nothing connected to the ESP32.
 3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
-   wire it as in the table, and read frames with `remote.py` over USB.
+   wire it as in the table, and read frames with `remote.py` over USB. Their
+   firmware is fixed on GPIO38, so check the LED first.
    Confirm 25 frames a second and a waterfall that follows the radio.
 4. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
    (bit-inverted, they're in wfview's format), 850–1699 the Sub
@@ -241,5 +291,4 @@ Rules for our own firmware:
 - Does the radio need a menu setting before it streams to the ACC socket,
   as the FT-710 does (EX 03-01-26 SCU-LAN10)?
 - Will the radio stream to the ESP32 and an SCU-LAN10 at the same time? Not
-  needed now, but it decides whether the female half of the cable is worth
-  keeping as a pass-through.
+  needed now.

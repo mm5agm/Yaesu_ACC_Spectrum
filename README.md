@@ -6,6 +6,9 @@ socket, through an ESP32-S3 over USB?
 Status: **investigation, nothing built and nothing measured on the radio yet.**
 The full plan is in [docs/plan.md](docs/plan.md).
 
+The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
+IC-7300MK2, goes into its female end, so the board is easy to plug in and unplug.
+
 ## Layout
 
 | Folder | What goes there |

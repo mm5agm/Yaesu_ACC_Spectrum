@@ -5,7 +5,14 @@ belongs in [plan.md](plan.md).
 
 ## Cable
 
-Amazon UK B0BRQDDTTZ, 13-pin mini-DIN male to female.
+Amazon UK B0BRQDDTTZ, 13-pin mini-DIN male to female, £18.99. All 13 pins confirmed
+wired, 2026-11-06.
+
+Not cut. A ready-made IC-7300MK2 13-pin plug with wires goes into the female end,
+because that makes it easier to plug the board into the circuit and unplug it. See
+"The cable and the board" in [plan.md](plan.md) for Icom's published colours.
+
+Metered from the cable's male plug to each wire of the Icom lead:
 
 | Pin | Wire colour | Continuity OK |
 |---|---|---|
@@ -22,6 +29,16 @@ Amazon UK B0BRQDDTTZ, 13-pin mini-DIN male to female.
 | 11 | | |
 | 12 | | |
 | 13 | | |
+
+## Board
+
+ESP32-S3 DevKitC-1 N16R8 (Amazon UK B0F8N8LZ4G).
+
+| Check | Result |
+|---|---|
+| Board version marked | |
+| Pin that drives the RGB LED | |
+| Paddle wiring removed | |
 
 ## Pin 8 check
 
