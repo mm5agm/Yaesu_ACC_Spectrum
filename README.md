@@ -49,4 +49,5 @@ goes into YWC as a serial input beside `Ft4222Bridge`.
 
 ## Licence
 
-None chosen yet. The repo is private.
+GPL-3.0, the same as the other repositories. See [LICENSE](LICENSE). Its sections 15
+and 16 also cover the lack of warranty and liability. The repo is private for now.
