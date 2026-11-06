@@ -46,7 +46,7 @@ Cable out of the radio. Pin 8 must be open to all other pins and to the shell.
 
 | Date | After what change | Result |
 |---|---|---|
-| | | |
+| 2026-11-06 | First check, Icom plug in the cable's female end | Open to the other 12 pins and the shield. Meter showed overload on all, over about 40 Mohm |
 
 ## Is the 13 V rail live with the radio off?
 
