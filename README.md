@@ -9,6 +9,15 @@ The full plan is in [docs/plan.md](docs/plan.md).
 The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
 IC-7300MK2, goes into its female end, so the board is easy to plug in and unplug.
 
+## Use at your own risk
+
+**Everything in this repository is used entirely at your own risk.** Connecting
+anything to the ACC socket can blow a fuse or damage the radio's main board, and the
+repair may mean sending the radio back to Yaesu. If you damage your radio, or anything
+else, that's your responsibility. The author accepts no liability for it, and nothing
+here is approved or supported by Yaesu. There is no warranty of any kind, and the
+information here may be wrong. Read [docs/fuse-risk.md](docs/fuse-risk.md) first.
+
 ## Layout
 
 | Folder | What goes there |

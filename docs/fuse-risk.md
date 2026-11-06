@@ -4,6 +4,9 @@ Written before anything is connected to the radio. Nothing here has been measure
 on the radio. Each claim says whether it comes from the schematic, Yaesu, an owner's
 report or reasoning.
 
+**Use at your own risk.** If you damage your radio, that's your responsibility. See
+the [README](../README.md#use-at-your-own-risk).
+
 ## Short answer
 
 **The fuse people warn about is probably the DVI one.** Yaesu says the radio has a

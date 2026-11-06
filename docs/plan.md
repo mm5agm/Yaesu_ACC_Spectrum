@@ -3,6 +3,9 @@
 Status: **draft plan, nothing built.** The cable has arrived and the board is
 chosen. See "The cable and the board".
 
+**Use at your own risk.** If you damage your radio, that's your responsibility. See
+the [README](../README.md#use-at-your-own-risk).
+
 ## What it is
 
 The ACC socket on the back of the FTdx101 is the port the SCU-LAN10 plugs
