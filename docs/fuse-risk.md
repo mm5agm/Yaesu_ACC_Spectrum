@@ -134,12 +134,12 @@ On the socket, pin 8 sits next to pins 4 and 7, and pin 12 is directly below it:
 
 ## Rules for this project
 
-1. **Pin 8 is cut and insulated before the plug goes near the radio.** Cut pins 1, 7,
-   8, 9, 10 and 13 to different lengths so the bare ends can't meet, and heat-shrink
-   each one on its own.
+1. **Pin 8 is insulated before the plug goes near the radio.** On the IC-7300MK2 lead
+   it's expected to be the gray wire; meter it to be sure. Heat-shrink the wires for
+   pins 1, 7, 8, 9, 10 and 13 one at a time, with the ends staggered so they can't meet.
 2. **Meter the plug before the first connection and after any wiring change.** With the
-   cable out of the radio, pin 8 must be open to the other 12 pins and to the plug's
-   metal shell.
+   cable out of the radio and the IC-7300MK2 plug in its female end, pin 8 on the male
+   plug must be open to the other 12 pins and to the plug's metal shell.
 3. **Plug and unplug only with the supply off.** That means off at the power supply,
    not just at the radio's front panel. Treat pin 8 as live whenever the supply is on.
 4. **Never put a probe or wire into the radio's socket.** Measure only at the breakout.
