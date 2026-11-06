@@ -18,6 +18,18 @@ else, that's your responsibility. The author accepts no liability for it, and no
 here is approved or supported by Yaesu. There is no warranty of any kind, and the
 information here may be wrong. Read [docs/fuse-risk.md](docs/fuse-risk.md) first.
 
+## The board's LED
+
+The board is an ESP32-S3 DevKitC-1 N16R8, marked HW678, and its RGB LED is on GPIO48
+in GRB order, so it's free for status lights. It's an addressable LED, so it needs a
+data stream, not a plain high or low. The paddle firmware drives it with the
+[Adafruit NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel) library and keeps
+it dim, because it's dazzling at full power.
+
+Some boards differ: version 1.1 of the DevKitC-1 has its LED on GPIO38, which this
+project uses for pin 12. Check yours before wiring it. See "The cable and the board"
+in [docs/plan.md](docs/plan.md).
+
 ## Layout
 
 | Folder | What goes there |
