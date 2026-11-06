@@ -180,7 +180,8 @@ Notes:
 
 - Check that GPIO10, 11, 13, 14, 38 and 39 are broken out on the board.
   The N16R8's octal PSRAM takes GPIO35–37, but the pins above don't use those.
-  This board's RGB LED is on GPIO48, which isn't used here.
+  This board's RGB LED is on GPIO48. No ACC signal uses that pin, and our firmware
+  will use it for status lights.
 - Put a 330 Ω resistor in series with each line from the radio (pins 3, 4,
   5, 6, 12). It limits the current if the levels turn out higher than
   expected or a wire goes to the wrong pin, and does no harm at 2 MHz. It
