@@ -56,6 +56,11 @@ bottom by the key. The manual's drawing shows the socket on the radio. That
 is the same view as the female end of the extension cable; looking into the
 male plug, the layout is mirrored left to right.
 
+![Cable male plug seen looking at the pins, key at the top. Top row left to right: pins 1, 2, 3, 4. Second row: 5, 6, 7, 8. Third row: 9, 10, 11, 12. Pin 13 is alone at the bottom.](images/acc-male-plug.svg)
+
+This is the cable's male plug, looking at its pins. The IC-7300MK2 plug looks the same,
+so the drawing works for both.
+
 ## The cable and the board
 
 **The cable isn't cut.** The first idea was to cut the extension cable (13-pin

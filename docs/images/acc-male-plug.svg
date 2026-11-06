@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 620" width="1040" height="620" font-family="Arial, Helvetica, sans-serif">
+<rect width="1040" height="620" fill="#ffffff"/>
+<text x="30" y="36" font-size="24" font-weight="bold" fill="#111">Cable male plug: the end that goes into the FTdx101 ACC socket</text>
+<text x="30" y="62" font-size="15" fill="#333">Looking at the pins, key at the top. This is the mirror image of the socket on the radio.</text>
+<circle cx="280" cy="330" r="228" fill="#d9d9d9" stroke="#333" stroke-width="4"/>
+<circle cx="280" cy="330" r="208" fill="#f4f4f4" stroke="#555" stroke-width="2"/>
+<rect x="246" y="98" width="68" height="38" fill="#555" stroke="#333" stroke-width="2"/>
+<text x="280" y="123" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">KEY</text>
+<circle cx="154.0" cy="215" r="24" fill="#8B5A2B" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="154.0" y="222" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
+<text x="154.0" y="256" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">PWR ON</text>
+<circle cx="238.0" cy="215" r="24" fill="#D62828" stroke="#111" stroke-width="3"/>
+<text x="238.0" y="222" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
+<text x="238.0" y="256" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">GND</text>
+<circle cx="322.0" cy="215" r="24" fill="#F28C28" stroke="#111" stroke-width="3"/>
+<text x="322.0" y="222" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">3</text>
+<text x="322.0" y="256" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">DATA1</text>
+<circle cx="406.0" cy="215" r="24" fill="#FFD60A" stroke="#111" stroke-width="3"/>
+<text x="406.0" y="222" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">4</text>
+<text x="406.0" y="256" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">DATA2</text>
+<circle cx="154.0" cy="297" r="24" fill="#2E8B3D" stroke="#111" stroke-width="3"/>
+<text x="154.0" y="304" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
+<text x="154.0" y="338" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">CLOCK</text>
+<circle cx="238.0" cy="297" r="24" fill="#1F5FBF" stroke="#111" stroke-width="3"/>
+<text x="238.0" y="304" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
+<text x="238.0" y="338" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">CS</text>
+<circle cx="322.0" cy="297" r="24" fill="#7B3FA0" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="322.0" y="304" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">7</text>
+<text x="322.0" y="338" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">3.3V</text>
+<circle cx="406.0" cy="297" r="24" fill="#9A9A9A" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="406.0" y="304" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">8</text>
+<text x="406.0" y="338" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">13.8V</text>
+<circle cx="154.0" cy="379" r="24" fill="#FFFFFF" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="154.0" y="386" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">9</text>
+<text x="154.0" y="420" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">PTT</text>
+<circle cx="238.0" cy="379" r="24" fill="#111111" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="238.0" y="386" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">10</text>
+<text x="238.0" y="420" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">SEND</text>
+<circle cx="322.0" cy="379" r="24" fill="#FFA6C9" stroke="#111" stroke-width="3"/>
+<text x="322.0" y="386" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">11</text>
+<text x="322.0" y="420" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">CNT RX</text>
+<circle cx="406.0" cy="379" r="24" fill="#8FD3F4" stroke="#111" stroke-width="3"/>
+<text x="406.0" y="386" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">12</text>
+<text x="406.0" y="420" font-size="13" font-weight="bold" fill="#111" text-anchor="middle">CNT TX</text>
+<circle cx="280" cy="461" r="24" fill="#B5E48C" stroke="#C00000" stroke-width="4" stroke-dasharray="7 4"/>
+<text x="280" y="468" font-size="20" font-weight="bold" fill="#000" text-anchor="middle">13</text>
+<text x="280" y="502" font-size="13" font-weight="bold" fill="#C00000" text-anchor="middle">Ground</text>
+<text x="540" y="96" font-size="14" font-weight="bold">Pin</text>
+<text x="582" y="96" font-size="14" font-weight="bold">FTdx101</text>
+<text x="732" y="96" font-size="14" font-weight="bold">Icom wire</text>
+<text x="840" y="96" font-size="14" font-weight="bold">Use</text>
+<line x1="540" y1="104" x2="1020" y2="104" stroke="#333"/>
+<text x="548" y="126" font-size="14" font-weight="bold">1</text>
+<text x="582" y="126" font-size="13" fill="#111">Power ON</text>
+<rect x="732" y="114" width="16" height="16" fill="#8B5A2B" stroke="#333"/>
+<text x="754" y="126" font-size="13" fill="#111">Brown</text>
+<text x="840" y="126" font-size="13" fill="#C00000">Insulate</text>
+<text x="548" y="158" font-size="14" font-weight="bold">2</text>
+<text x="582" y="158" font-size="13" fill="#111">GND</text>
+<rect x="732" y="146" width="16" height="16" fill="#D62828" stroke="#333"/>
+<text x="754" y="158" font-size="13" fill="#111">Red</text>
+<text x="840" y="158" font-size="13" fill="#111">ESP32 GND, scope ground</text>
+<text x="548" y="190" font-size="14" font-weight="bold">3</text>
+<text x="582" y="190" font-size="13" fill="#111">DATA1</text>
+<rect x="732" y="178" width="16" height="16" fill="#F28C28" stroke="#333"/>
+<text x="754" y="190" font-size="13" fill="#111">Orange</text>
+<text x="840" y="190" font-size="13" fill="#111">Scope only at first</text>
+<text x="548" y="222" font-size="14" font-weight="bold">4</text>
+<text x="582" y="222" font-size="13" fill="#111">DATA2</text>
+<rect x="732" y="210" width="16" height="16" fill="#FFD60A" stroke="#333"/>
+<text x="754" y="222" font-size="13" fill="#111">Yellow</text>
+<text x="840" y="222" font-size="13" fill="#111">ESP32 GPIO11</text>
+<text x="548" y="254" font-size="14" font-weight="bold">5</text>
+<text x="582" y="254" font-size="13" fill="#111">CLOCK</text>
+<rect x="732" y="242" width="16" height="16" fill="#2E8B3D" stroke="#333"/>
+<text x="754" y="254" font-size="13" fill="#111">Green</text>
+<text x="840" y="254" font-size="13" fill="#111">ESP32 GPIO10</text>
+<text x="548" y="286" font-size="14" font-weight="bold">6</text>
+<text x="582" y="286" font-size="13" fill="#111">CS</text>
+<rect x="732" y="274" width="16" height="16" fill="#1F5FBF" stroke="#333"/>
+<text x="754" y="286" font-size="13" fill="#111">Blue</text>
+<text x="840" y="286" font-size="13" fill="#111">ESP32 GPIO13</text>
+<text x="548" y="318" font-size="14" font-weight="bold">7</text>
+<text x="582" y="318" font-size="13" fill="#111">3.3V (through 1k)</text>
+<rect x="732" y="306" width="16" height="16" fill="#7B3FA0" stroke="#333"/>
+<text x="754" y="318" font-size="13" fill="#111">Purple</text>
+<text x="840" y="318" font-size="13" fill="#C00000">Insulate</text>
+<text x="548" y="350" font-size="14" font-weight="bold">8</text>
+<text x="582" y="350" font-size="13" fill="#111">13.8V (F1003)</text>
+<rect x="732" y="338" width="16" height="16" fill="#9A9A9A" stroke="#333"/>
+<text x="754" y="350" font-size="13" fill="#111">Gray</text>
+<text x="840" y="350" font-size="13" fill="#C00000">Insulate. DANGEROUS</text>
+<text x="548" y="382" font-size="14" font-weight="bold">9</text>
+<text x="582" y="382" font-size="13" fill="#111">Reserve (ACC_PTT)</text>
+<rect x="732" y="370" width="16" height="16" fill="#FFFFFF" stroke="#333"/>
+<text x="754" y="382" font-size="13" fill="#111">White</text>
+<text x="840" y="382" font-size="13" fill="#C00000">Insulate, don't probe</text>
+<text x="548" y="414" font-size="14" font-weight="bold">10</text>
+<text x="582" y="414" font-size="13" fill="#111">Reserve (ACC_SEND)</text>
+<rect x="732" y="402" width="16" height="16" fill="#111111" stroke="#333"/>
+<text x="754" y="414" font-size="13" fill="#111">Black</text>
+<text x="840" y="414" font-size="13" fill="#C00000">Insulate, don't probe</text>
+<text x="548" y="446" font-size="14" font-weight="bold">11</text>
+<text x="582" y="446" font-size="13" fill="#111">CNT RX</text>
+<rect x="732" y="434" width="16" height="16" fill="#FFA6C9" stroke="#333"/>
+<text x="754" y="446" font-size="13" fill="#111">Pink</text>
+<text x="840" y="446" font-size="13" fill="#111">ESP32 GPIO39</text>
+<text x="548" y="478" font-size="14" font-weight="bold">12</text>
+<text x="582" y="478" font-size="13" fill="#111">CNT TX</text>
+<rect x="732" y="466" width="16" height="16" fill="#8FD3F4" stroke="#333"/>
+<text x="754" y="478" font-size="13" fill="#111">Light blue</text>
+<text x="840" y="478" font-size="13" fill="#111">ESP32 GPIO38 (check LED)</text>
+<text x="548" y="510" font-size="14" font-weight="bold">13</text>
+<text x="582" y="510" font-size="13" fill="#111">Reserve (ground)</text>
+<rect x="732" y="498" width="16" height="16" fill="#B5E48C" stroke="#333"/>
+<text x="754" y="510" font-size="13" fill="#111">Light green</text>
+<text x="840" y="510" font-size="13" fill="#C00000">Insulate</text>
+<circle cx="552" cy="548" r="10" fill="#fff" stroke="#111" stroke-width="3"/>
+<text x="570" y="553" font-size="13">Goes to the breakout</text>
+<circle cx="752" cy="548" r="10" fill="#fff" stroke="#C00000" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="770" y="553" font-size="13" fill="#C00000">Never connected</text>
+<text x="30" y="600" font-size="13" fill="#333">From the FTdx101 and IC-7300MK2 manuals and the FTdx101 schematic. Not yet metered: confirm with a meter before relying on it.</text>
+</svg>
