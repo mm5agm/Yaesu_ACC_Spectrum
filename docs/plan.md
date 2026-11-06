@@ -18,6 +18,9 @@ frames to the PC over USB or Wi-Fi.
 
 Receive-only. Nothing in this plan keys the radio.
 
+**Read [fuse-risk.md](fuse-risk.md) before connecting anything.** ACC pin 8 is
+13.8 V behind a 3.15 A fuse, and pins 9 and 10 are the PTT and SEND lines.
+
 ## ACC socket pinout
 
 From page 17 of the FTdx101 operating manual
@@ -27,23 +30,23 @@ From page 17 of the FTdx101 operating manual
 |---|---|---|---|---|
 | 1 | Power ON | Remote power-on line (believed to be how the SCU-LAN10 switches the radio on) | into radio | **Not connected** |
 | 2 | GND | Signal ground | — | ESP32 GND |
-| 3 | DATA1 | SPI data line 1. Function on the FTdx101 not yet confirmed; may carry the Sub receiver | out of radio | Probe first, then ESP32 GPIO14 if useful |
+| 3 | DATA1 | SPI data line 1, `ACC_MISO` on the schematic. Function not yet confirmed; the name suggests data into the radio | to be confirmed | Scope first, then ESP32 GPIO14 if useful |
 | 4 | DATA2 | SPI data line 2: the scope frames (4096 bytes each) | out of radio | ESP32 GPIO11 |
 | 5 | CLOCK | SPI clock, 2 MHz, SPI mode 1. The radio is the SPI master | out of radio | ESP32 GPIO10 |
 | 6 | CS | SPI chip select, active low: low for each frame, 25 times a second | out of radio | ESP32 GPIO13 |
-| 7 | 3.3V | 3.3 V supply from the radio | out of radio | **Not connected.** Don't power anything from it |
-| 8 | 13.8V | 13.8 V supply from the radio, fused inside the radio | out of radio | **Not connected.** A short blows the internal fuse |
-| 9 | Reserve | Reserved by Yaesu, function unknown | — | **Not connected** |
-| 10 | Reserve | Reserved by Yaesu, function unknown | — | **Not connected** |
+| 7 | 3.3V | 3.3 V through a 1k resistor (R1230), about 3 mA at most | out of radio | **Not connected.** It can't power anything |
+| 8 | 13.8V | 13.8 V through a 0 ohm link and F1003 (3.15 A) | out of radio | **Not connected.** A short blows the fuse, and a touch on a data pin could damage the radio's logic |
+| 9 | Reserve | `ACC_PTT` on the schematic | not known | **Not connected, not probed** |
+| 10 | Reserve | `ACC_SEND` on the schematic | not known | **Not connected, not probed** |
 | 11 | CNT RX | Control serial into the radio (UART, 115200). Carries the reply to the heartbeat, within 10 ms | into radio | ESP32 GPIO39 (UART TX) |
 | 12 | CNT TX | Control serial out of the radio (UART, 115200). Sends the heartbeat `alive\0` once a second | out of radio | ESP32 GPIO38 (UART RX) |
-| 13 | Reserve | Reserved by Yaesu, function unknown | — | **Not connected** |
+| 13 | Reserve | Ground, through a 0 ohm link (R1106) | — | **Not connected** |
 
 "Direction" is as seen from the radio. The labels in the "Manual label"
 column are exactly as printed in the manual; the functions come from the
-manual where it says, and otherwise from the SCU-LAN10 protocol work listed
-under "Where the code is". Pins 1, 7, 8, 9, 10 and 13 are what's left to
-confirm or describe properly before this is written up for other users.
+manual where it says, and otherwise from the Technical Supplement schematic
+and the SCU-LAN10 protocol work listed under "Where the code is". The
+direction and behaviour of pins 9 and 10 are still unknown.
 
 The socket is a **13-pin mini-DIN**: three rows of four pins plus one at the
 bottom by the key. The manual's drawing shows the socket on the radio. That
@@ -57,7 +60,7 @@ Seven of the 13: pins 2, 4, 5, 6, 11 and 12, plus pin 3 for probing.
 | ACC pin | Manual label | Function | Direction | Why |
 |---|---|---|---|---|
 | 2 | GND | Signal ground | — | Common ground with the ESP32 |
-| 3 | DATA1 | SPI data line 1 | radio → ESP32 | **Probe only at first.** May carry Sub receiver data on the FTdx101 |
+| 3 | DATA1 | SPI data line 1 | to be confirmed | **Scope only at first.** Nothing drives it |
 | 4 | DATA2 | SPI data line 2 | radio → ESP32 | The scope frames |
 | 5 | CLOCK | SPI clock | radio → ESP32 | 2 MHz clock for the data |
 | 6 | CS | SPI chip select | radio → ESP32 | Low for each 4096-byte frame |
@@ -71,16 +74,15 @@ The other six.
 | ACC pin | Manual label | Function | Why not |
 |---|---|---|---|
 | 1 | Power ON | Remote power-on line | Switches the radio on; not needed |
-| 7 | 3.3V | 3.3 V supply from the radio | Don't power anything from it |
-| 8 | 13.8V | 13.8 V supply from the radio | Internally fused; a short blows the fuse inside the radio |
-| 9 | Reserve | Reserved, function unknown | Nothing to connect |
-| 10 | Reserve | Reserved, function unknown | Nothing to connect |
-| 13 | Reserve | Reserved, function unknown | Nothing to connect |
+| 7 | 3.3V | 3.3 V through 1k | It can't power anything |
+| 8 | 13.8V | 13.8 V through F1003 | A short blows the fuse, and a touch on a data pin could damage the radio's logic |
+| 9 | Reserve | `ACC_PTT` | The radio's PTT line |
+| 10 | Reserve | `ACC_SEND` | The radio's SEND line |
+| 13 | Reserve | Ground | Pin 2 is the ground we use |
 
-Cut each of these wires back and insulate it on its own (heat-shrink, not
-just tape round the bundle), so none can touch another wire or the ESP32.
-Pins 9, 10 and 13 can be checked with the scope during the level checks out
-of curiosity, but nothing gets connected to them.
+Cut each of these wires back to a different length and insulate it on its own
+(heat-shrink, not just tape round the bundle), so none can touch another wire
+or the ESP32. None of them reaches the breakout, and they aren't probed.
 
 ## Wiring to the ESP32-S3
 
@@ -95,13 +97,13 @@ unchanged.
 | 4 | DATA2 | SPI data line 2 | GPIO11 | SPI slave data in |
 | 5 | CLOCK | SPI clock | GPIO10 | SPI slave clock in |
 | 6 | CS | SPI chip select | GPIO13 | SPI slave chip select in |
-| 7 | 3.3V | 3.3 V supply from the radio | — | Not connected |
-| 8 | 13.8V | 13.8 V supply from the radio | — | Not connected |
-| 9 | Reserve | Reserved | — | Not connected |
-| 10 | Reserve | Reserved | — | Not connected |
+| 7 | 3.3V | 3.3 V through 1k | — | Not connected |
+| 8 | 13.8V | 13.8 V through F1003 | — | Not connected |
+| 9 | Reserve | `ACC_PTT` | — | Not connected |
+| 10 | Reserve | `ACC_SEND` | — | Not connected |
 | 11 | CNT RX | Control serial into the radio | GPIO39 | UART TX (heartbeat reply out) |
 | 12 | CNT TX | Control serial out of the radio | GPIO38 | UART RX (heartbeat in) |
-| 13 | Reserve | Reserved | — | Not connected |
+| 13 | Reserve | Ground | — | Not connected |
 
 Notes:
 
@@ -110,14 +112,17 @@ Notes:
   pins above are free.
 - Put a 330 Ω resistor in series with each line from the radio (pins 3, 4,
   5, 6, 12). It limits the current if the levels turn out higher than
-  expected or a wire goes to the wrong pin, and does no harm at 2 MHz.
+  expected or a wire goes to the wrong pin, and does no harm at 2 MHz. It
+  protects the ESP32, not the radio.
 - Keep the wires from the cable to the ESP32 short; it's a 2 MHz clock.
 - Power the ESP32 from its own USB lead, never from the ACC socket.
 
 ## Before connecting the ESP32: check the levels
 
 The ESP32-S3 takes 3.3 V at most on any pin. With the cable wired to a
-breakout but nothing else attached, and the Siglent scope's ground on pin 2:
+breakout but nothing else attached, and the Siglent scope's ground on pin 2.
+The supply is off whenever the cable is plugged or unplugged, and pin 8 has been
+metered open to every other pin and the shell, as in [fuse-risk.md](fuse-risk.md):
 
 1. **Pin 12:** expect a burst once a second (the `alive\0` heartbeat, UART
    at 115200). Note the high level.
@@ -207,7 +212,9 @@ Rules for our own firmware:
 1. **Cable.** Check the male plug fits the ACC socket before cutting. Cut
    near the female end. Use the female end as a test socket and make a
    table of wire colour to pin number with a meter. Cheap cables sometimes
-   leave pins unconnected, so check all 13.
+   leave pins unconnected, so check all 13. Then cut and insulate pins 1, 7,
+   8, 9, 10 and 13, and meter pin 8 open to everything before the plug goes
+   near the radio.
 2. **Levels.** Scope checks as above, nothing connected to the ESP32.
 3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
    wire it as in the table, and read frames with `remote.py` over USB.
@@ -227,7 +234,10 @@ Rules for our own firmware:
 ## Open questions
 
 - Logic levels on the ACC pins: to be measured.
-- Does pin 3 carry the Sub receiver, or something else?
+- Does pin 3 carry the Sub receiver, or something else? The schematic calls
+  it `ACC_MISO`, which points away from the Sub receiver.
+- What do `ACC_PTT` and `ACC_SEND` on pins 9 and 10 do? We don't need them, and
+  they aren't to be probed.
 - Does the radio need a menu setting before it streams to the ACC socket,
   as the FT-710 does (EX 03-01-26 SCU-LAN10)?
 - Will the radio stream to the ESP32 and an SCU-LAN10 at the same time? Not

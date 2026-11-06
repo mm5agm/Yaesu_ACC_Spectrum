@@ -23,6 +23,24 @@ Amazon UK B0BRQDDTTZ, 13-pin mini-DIN male to female.
 | 12 | | |
 | 13 | | |
 
+## Pin 8 check
+
+Cable out of the radio. Pin 8 must be open to all other pins and to the shell.
+
+| Date | After what change | Result |
+|---|---|---|
+| | | |
+
+## Is the 13 V rail live with the radio off?
+
+Measured at the rear +13.8V jack, with an RCA lead plugged in while the supply
+is off and a meter on the far end.
+
+| Radio front panel | Supply | Volts |
+|---|---|---|
+| Off | On | |
+| On | On | |
+
 ## Levels
 
 Scope ground on pin 2, nothing connected to the ESP32.
