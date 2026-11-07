@@ -35,6 +35,12 @@ Some boards differ: version 1.1 of the DevKitC-1 has its LED on GPIO38, which th
 project uses for pin 12. Check yours before wiring it. See "The cable and the board"
 in [docs/plan.md](docs/plan.md).
 
+## Wiring
+
+Which ACC wire goes to which terminal, and which ones need a 330 ohm resistor, is
+in "Wiring to the ESP32-S3" in [docs/plan.md](docs/plan.md), with a marked-up photo
+of the board.
+
 ## Layout
 
 | Folder | What goes there |
