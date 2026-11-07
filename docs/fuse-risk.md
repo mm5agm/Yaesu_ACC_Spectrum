@@ -123,7 +123,7 @@ touches one of them, 13.8 V goes straight into low-voltage logic. F1003 needn't 
 first, because logic can fail at far less than 3.15 A. That would be a board fault, not
 a fuse fault.
 
-The 330 ohm resistors in the plan sit on the ESP32 side of the wire. They protect the
+The 470 ohm resistors in the plan sit on the ESP32 side of the wire. They protect the
 ESP32, and do nothing for a short between two wires on the radio side of them.
 
 On the socket, pin 8 sits next to pins 4 and 7, and pin 12 is directly below it:
