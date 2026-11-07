@@ -176,6 +176,13 @@ to another pin.
 | 12 | CNT TX | Control serial out of the radio | GPIO38 | UART RX (heartbeat in) |
 | 13 | Reserve | Ground | — | Not connected |
 
+On the screw-terminal expansion board, the wires go here. The terminal marked "3"
+is GPIO3, not ACC pin 3. The wires already on the board in the photo are from the
+paddle work and come off first. The unmarked photo is
+[expansion-board.jpg](images/expansion-board.jpg).
+
+![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Top row: ACC pin 2 GND (red wire) to the GND terminal, no resistor; pin 3 DATA1 (orange) to GPIO14 through 330 ohms; pin 6 CS (blue) to GPIO13 through 330 ohms; pin 4 DATA2 (yellow) to GPIO11 through 330 ohms; pin 5 CLOCK (green) to GPIO10 through 330 ohms. Bottom row: pin 12 CNT TX (light blue) to GPIO38 through 330 ohms; pin 11 CNT RX (pink) to GPIO39, no resistor.](images/acc-wiring.jpg)
+
 Notes:
 
 - Check that GPIO10, 11, 13, 14, 38 and 39 are broken out on the board.
