@@ -37,9 +37,31 @@ in [docs/plan.md](docs/plan.md).
 
 ## Wiring
 
-Which ACC wire goes to which terminal, and which ones need a 330 ohm resistor, is
-in "Wiring to the ESP32-S3" in [docs/plan.md](docs/plan.md), with a marked-up photo
-of the board.
+![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 330 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 330 ohms.](docs/images/acc-wiring.jpg)
+
+Every signal line has a 330 ohm resistor in series at the ESP32 end; ground doesn't.
+Pins 1, 7, 8, 9, 10 and 13 aren't connected. The details, and the checks to make
+before connecting anything, are in "Wiring to the ESP32-S3" in
+[docs/plan.md](docs/plan.md).
+
+### Yes, ground is the red wire
+
+Red for ground looks like the last thing any sane person would do, but the colours
+aren't my choice. They come with the ready-made 13-pin lead (the IC-7300MK2's ACC
+plug), and they follow the resistor colour code by pin number, not by what the wire
+does: pin 1 brown, 2 red, 3 orange, 4 yellow, 5 green, 6 blue, 7 purple, 8 gray,
+9 white and 10 black. Pink, light blue and light green cover pins 11 to 13. Pin 2 is
+ground, so ground is red.
+
+The upside is that anyone who knows the code can read a wire's pin number from its
+colour. The downside is that the usual meanings don't apply:
+
+- **Red is ground.** Mark it GND with a label or a band of tape.
+- **Gray is 13.8 V** (pin 8), behind a fuse. Insulate it.
+- **Black is SEND** (pin 10), not ground. Insulate it.
+- Blue and light blue are different signals, and so are green and light green.
+
+Other leads may use other colours, so check yours with a meter before wiring.
 
 ## Layout
 
