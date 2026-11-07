@@ -177,11 +177,11 @@ to another pin.
 | 13 | Reserve | Ground | — | Not connected |
 
 On the screw-terminal expansion board, the wires go here. The terminal marked "3"
-is GPIO3, not ACC pin 3. The wires already on the board in the photo are from the
-paddle work and come off first. The unmarked photo is
+is GPIO3, not ACC pin 3. In this photo the bottom row's numbers read the right way up
+and the top row's are upside down. The unmarked photo is
 [expansion-board.jpg](images/expansion-board.jpg).
 
-![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Top row: ACC pin 2 GND (red wire) to the GND terminal, no resistor; pin 3 DATA1 (orange) to GPIO14 through 330 ohms; pin 6 CS (blue) to GPIO13 through 330 ohms; pin 4 DATA2 (yellow) to GPIO11 through 330 ohms; pin 5 CLOCK (green) to GPIO10 through 330 ohms. Bottom row: pin 12 CNT TX (light blue) to GPIO38 through 330 ohms; pin 11 CNT RX (pink) to GPIO39, no resistor.](images/acc-wiring.jpg)
+![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 330 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 330 ohms.](images/acc-wiring.jpg)
 
 Notes:
 
@@ -189,10 +189,14 @@ Notes:
   The N16R8's octal PSRAM takes GPIO35–37, but the pins above don't use those.
   This board's RGB LED is on GPIO48. No ACC signal uses that pin, and our firmware
   will use it for status lights.
-- Put a 330 Ω resistor in series with each line from the radio (pins 3, 4,
-  5, 6, 12). It limits the current if the levels turn out higher than
-  expected or a wire goes to the wrong pin, and does no harm at 2 MHz. It
-  protects the ESP32, not the radio.
+- Put a 330 Ω resistor in series with every signal line (pins 3, 4, 5, 6,
+  11 and 12), but not ground. On the lines from the radio it limits the
+  current if the levels turn out higher than expected or a wire goes to the
+  wrong pin, and does no harm at 2 MHz. On pin 11, the one line the ESP32
+  drives, it limits the current into the radio's input if the ESP32 is
+  powered while the radio is off, or if the wire lands on the wrong pin.
+  115200 baud passes through it untouched. Mount the resistors at the ESP32
+  end.
 - Keep the wires from the cable to the ESP32 short; it's a 2 MHz clock.
 - Power the ESP32 from its own USB lead, never from the ACC socket.
 
