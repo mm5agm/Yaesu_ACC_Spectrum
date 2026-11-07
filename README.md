@@ -37,10 +37,10 @@ in [docs/plan.md](docs/plan.md).
 
 ## Wiring
 
-![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 330 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 330 ohms.](docs/images/acc-wiring.jpg)
+![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 470 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 470 ohms.](docs/images/acc-wiring.jpg)
 
 The six signal wires that go to the ESP32 (pins 3, 4, 5, 6, 11 and 12) each have a
-330 ohm resistor in series at the ESP32 end. Ground (pin 2) goes straight to GND.
+470 ohm resistor in series at the ESP32 end. Ground (pin 2) goes straight to GND.
 
 These pins are **not connected** and have no resistors. Heat-shrink over the end of
 each wire, one wire at a time, is all they need:
@@ -77,6 +77,9 @@ current is better.
 | 470 ohm | about 30 ns | 12% | 7 mA | 3.6 mA | 2.1 x |
 | 1k | about 65 ns | 26%, still works but getting soft | 3.3 mA | 1.7 mA | 4.5 x |
 
+The table shows 470 ohm as the best balance: twice the protection of 220 ohm, at
+12% of the clock's half-cycle, and that's why it was chosen.
+
 The 5 V figures assume the ESP32's pin is clamped at about 3.3 V. Espressif doesn't
 publish a safe current into a pin, so treat any 5 V line as a reason to stop and add
 level shifting, not something the resistor makes safe. No resistor protects against
@@ -84,9 +87,8 @@ pin 8: 13.8 V through 470 ohm is still about 22 mA, which is why pin 8 isn't
 connected at all.
 
 Clock and data each have the same resistor, so they're delayed together and stay in
-step. Anything from 220 to 470 ohm is fine; the higher the value, the more
-protection. If the scope shows rounded clock edges at the ESP32 pin, use a lower
-value on the clock line.
+step. If the scope shows rounded clock edges at the ESP32 pin, use a lower value
+on the clock line.
 
 ### Yes, ground is the red wire
 
