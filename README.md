@@ -1,7 +1,12 @@
-# FTdx101 ACC spectrum
+# Yaesu ACC spectrum
 
-Can Yaesu Web Control (YWC) get the FTdx101MP's own scope data from the ACC
-socket, through an ESP32-S3 over USB?
+Can Yaesu Web Control (YWC) get a Yaesu's own scope data from the ACC socket,
+through an ESP32-S3 over USB?
+
+The work starts on an FTdx101MP. The FTDX101D and FTDX10 are expected to send the
+same data on the same socket (other people's projects have done it on the FTDX10),
+so the same board and code should suit them too. The FT-710 doesn't need it: it
+already sends its scope over USB, and YWC uses that.
 
 Status: **investigation, nothing built and nothing measured on the radio yet.**
 The full plan is in [docs/plan.md](docs/plan.md).
