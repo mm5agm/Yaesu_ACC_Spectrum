@@ -111,7 +111,9 @@ Other leads may use other colours, so check yours with a meter before wiring.
 
 ## Credits and background
 
-This project builds on other people's work on the FTDX10. **None of their code is
+This project builds on other people's work on the FTDX10 and FT-710. ratmandu
+notes that the FTDX101 uses the same ACC data, but as far as I can find, no one
+has yet published captures from an FTDX101MP or D. **None of their code is
 used here.** What it takes from them is the physical side: which ACC pins carry the
 scope data, the signal levels, the SPI clock and framing, the once-a-second
 heartbeat on pins 11 and 12 that wakes the data up, and the finding that the lines
@@ -125,7 +127,7 @@ can be wired straight to an ESP32. The code is my own.
 - [sanjint.com: Yaesu FTDX10 scope](https://sanjint.com/yaesu-ftdx10-scope): a
   write-up of the ACC signals on the FTDX10.
 - [ratmandu/YaesuWFTesting](https://github.com/ratmandu/YaesuWFTesting): the first
-  published frame layout, with test tools.
+  published frame layout, worked out on an FT-710, with test tools.
 - [CarrierWaveApp/sculan10-protocol](https://github.com/CarrierWaveApp/sculan10-protocol):
   a written description of the protocol Yaesu's SCU-LAN10 uses on the same lines.
 
