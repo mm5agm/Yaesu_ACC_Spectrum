@@ -39,9 +39,11 @@ in [docs/plan.md](docs/plan.md).
 
 ![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 330 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 330 ohms.](docs/images/acc-wiring.jpg)
 
-Every signal line has a 330 ohm resistor in series at the ESP32 end; ground doesn't.
+The six signal wires that go to the ESP32 (pins 3, 4, 5, 6, 11 and 12) each have a
+330 ohm resistor in series at the ESP32 end. Ground (pin 2) goes straight to GND.
 
-These pins are **not connected**. Insulate each wire on its own, with heat-shrink:
+These pins are **not connected** and have no resistors. Heat-shrink over the end of
+each wire, one wire at a time, is all they need:
 
 - Pin 1, brown: Power ON, the remote power-on line
 - Pin 7, purple: 3.3 V through 1k, which can't power anything
