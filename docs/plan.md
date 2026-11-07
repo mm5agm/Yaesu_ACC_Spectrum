@@ -285,10 +285,10 @@ What's left to check:
 
 Rules for our own firmware:
 
-- Write it from the MIT sources (ratmandu, sculan10-protocol) and our own
-  scope captures, not from SLTPLAN's code. Facts about the protocol
-  (timings, frame layout, the heartbeat) aren't anyone's property; their
-  code is.
+- Write it from scratch. Use the facts the other projects found (pins,
+  levels, timings, frame layout, the heartbeat) and our own scope captures,
+  but no one else's code, not even the MIT projects'. Facts about the
+  protocol aren't anyone's property; their code is.
 - Credit SLTPLAN for showing that an ESP32-S3 can do it.
 
 ## Steps

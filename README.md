@@ -4,7 +4,7 @@ Can Yaesu Web Control (YWC) get a Yaesu's own scope data from the ACC socket,
 through an ESP32-S3 over USB?
 
 The work starts on an FTdx101MP. The FTDX101D and FTDX10 are expected to send the
-same data on the same socket (other people's projects have done it on the FTDX10),
+same data on the same socket ([other people's projects](#credits-and-background) have done it on the FTDX10),
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
@@ -58,9 +58,9 @@ the ESP32-S3" in [docs/plan.md](docs/plan.md).
 ### Resistor value and the 2 MHz clock
 
 The resistors are there for protection while the radio's levels are still unknown.
-The FTDX10 projects this follows wire straight through with no resistors, and it
+The [FTDX10 projects](#credits-and-background) this follows wire straight through with no resistors, and it
 works. A resistor at the ESP32 end also softens fast edges and damps ringing. That
-may help with the crosstalk SLTPLAN worked around by lowering the ESP32's drive
+may help with the crosstalk [SLTPLAN](https://github.com/SLTPLAN/FTDX10_WF_HUB) worked around by lowering the ESP32's drive
 strength on the pin 11 line.
 
 The fastest line is the 2 MHz SPI clock. Each half-cycle lasts 250 ns. With a short
@@ -109,6 +109,29 @@ colour. The downside is that the usual meanings don't apply:
 
 Other leads may use other colours, so check yours with a meter before wiring.
 
+## Credits and background
+
+This project builds on other people's work on the FTDX10. **None of their code is
+used here.** What it takes from them is the physical side: which ACC pins carry the
+scope data, the signal levels, the SPI clock and framing, the once-a-second
+heartbeat on pins 11 and 12 that wakes the data up, and the finding that the lines
+can be wired straight to an ESP32. The code is our own.
+
+- [SLTPLAN/FTDX10_WF_HUB](https://github.com/SLTPLAN/FTDX10_WF_HUB): ESP32-S3
+  firmware that shows the FTDX10's scope from the ACC socket. The pin mapping and
+  the heartbeat here follow what it found.
+- [SLTPLAN/FTDX10_WF](https://github.com/SLTPLAN/FTDX10_WF): the PC side of the
+  same project.
+- [sanjint.com: Yaesu FTDX10 scope](https://sanjint.com/yaesu-ftdx10-scope): a
+  write-up of the ACC signals on the FTDX10.
+- [ratmandu/YaesuWFTesting](https://github.com/ratmandu/YaesuWFTesting): the first
+  published frame layout, with test tools.
+- [CarrierWaveApp/sculan10-protocol](https://github.com/CarrierWaveApp/sculan10-protocol):
+  a written description of the protocol Yaesu's SCU-LAN10 uses on the same lines.
+
+Thanks to all of them. Their pages are the place to read up on how the data was
+found.
+
 ## Layout
 
 | Folder | What goes there |
@@ -136,7 +159,8 @@ goes into YWC as a serial input beside `Ft4222Bridge`.
   ESP32's port explicitly.
 - **No SLTPLAN code in this repo.** Their projects have no licence. Their
   firmware may be flashed as an outside comparison, but it isn't copied here,
-  and our firmware is written from the MIT sources and our own captures.
+  and our firmware is written from scratch, from what's known about the
+  signals and from our own captures.
 
 ## Licence
 
