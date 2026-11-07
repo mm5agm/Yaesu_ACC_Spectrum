@@ -115,7 +115,7 @@ This project builds on other people's work on the FTDX10. **None of their code i
 used here.** What it takes from them is the physical side: which ACC pins carry the
 scope data, the signal levels, the SPI clock and framing, the once-a-second
 heartbeat on pins 11 and 12 that wakes the data up, and the finding that the lines
-can be wired straight to an ESP32. The code is our own.
+can be wired straight to an ESP32. The code is my own.
 
 - [SLTPLAN/FTDX10_WF_HUB](https://github.com/SLTPLAN/FTDX10_WF_HUB): ESP32-S3
   firmware that shows the FTDX10's scope from the ACC socket. The pin mapping and
