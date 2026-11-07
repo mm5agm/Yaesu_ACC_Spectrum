@@ -50,7 +50,7 @@ each wire, one wire at a time, is all they need:
 - Pin 8, gray: 13.8 V behind a fuse
 - Pin 9, white: the radio's PTT line
 - Pin 10, black: the radio's SEND line
-- Pin 13, light green: a second ground; pin 2 is the one we use
+- Pin 13, light green: a second ground; pin 2 is the one I use
 
 The details, and the checks to make before connecting anything, are in "Wiring to
 the ESP32-S3" in [docs/plan.md](docs/plan.md).
@@ -138,7 +138,7 @@ found.
 
 | Folder | What goes there |
 |---|---|
-| `firmware/` | Our own ESP32-S3 firmware |
+| `firmware/` | My own ESP32-S3 firmware |
 | `tools/` | Capture and analysis scripts |
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
 | `docs/` | The plan and the bench notes |
@@ -161,8 +161,8 @@ goes into YWC as a serial input beside `Ft4222Bridge`.
   ESP32's port explicitly.
 - **No SLTPLAN code in this repo.** Their projects have no licence. Their
   firmware may be flashed as an outside comparison, but it isn't copied here,
-  and our firmware is written from scratch, from what's known about the
-  signals and from our own captures.
+  and my firmware is written from scratch, from what's known about the
+  signals and from my own captures.
 
 ## Licence
 

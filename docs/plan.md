@@ -108,22 +108,20 @@ as GND with a label or a band of tape. Blue and light blue are different signals
 are green and light green.
 
 **The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, marked HW678, Amazon UK
-B0F8N8LZ4G), the one from the paddle work. Anything still wired to it from that work comes off
-first.
+B0F8N8LZ4G). Anything still wired to it from earlier work comes off first.
 
 - It normally has two USB sockets. Use the one marked USB, the S3's native USB, not
   the one marked UART.
-- Its RGB LED is on GPIO48, found with the paddle firmware's `ledscan` command (see
-  `core/firmware/paddle-adapter` in YWC). So GPIO38 is free for the heartbeat. Version
+- Its RGB LED is on GPIO48, found by scanning the pins one at a time. So GPIO38 is
+  free for the heartbeat. Version
   1.1 of the DevKitC-1 has the LED on GPIO38, so another board may differ. It's an
   addressable RGB LED in GRB order, so it takes a data stream, not a plain high or low.
-  The paddle firmware drives it with the Adafruit NeoPixel library, because the core's
-  `neopixelWrite()` only ever drives the first pin it was called with, which defeated
-  the scan. Firmware here that wants the LED can do the same.
+  Drive it with the Adafruit NeoPixel library, kept dim. The core's `neopixelWrite()`
+  only ever drives the first pin it was called with, which is no good for a scan.
 - The UART socket is the board's CH343 port, COM5 on this PC. Flashing tools are pinned
   to the board's port by name, because COM3 and COM4 are the radio's.
 
-## Pins we need
+## Pins I need
 
 Seven of the 13: pins 2, 4, 5, 6, 11 and 12, plus pin 3 for probing.
 
@@ -148,7 +146,7 @@ The other six.
 | 8 | 13.8V | **Gray** | 13.8 V through F1003 | A short blows the fuse, and a touch on a data pin could damage the radio's logic |
 | 9 | Reserve | White | `ACC_PTT` | The radio's PTT line |
 | 10 | Reserve | **Black** | `ACC_SEND` | The radio's SEND line |
-| 13 | Reserve | Light green | Ground | Pin 2 is the ground we use |
+| 13 | Reserve | Light green | Ground | Pin 2 is the ground I use |
 
 Insulate each of these wires on its own (heat-shrink, not just tape round the
 bundle), with the ends staggered, so none can touch another wire or the ESP32.
@@ -157,7 +155,7 @@ None of them reaches the breakout, and they aren't probed.
 ## Wiring to the ESP32-S3
 
 This is the pin mapping SLTPLAN's firmware uses, so their code runs
-unchanged. On a board with its LED on GPIO38, our own firmware can move that signal
+unchanged. On a board with its LED on GPIO38, my own firmware can move that signal
 to another pin.
 
 | ACC pin | Manual label | Function | ESP32-S3 | Role on the ESP32 |
@@ -187,7 +185,7 @@ Notes:
 
 - Check that GPIO10, 11, 13, 14, 38 and 39 are broken out on the board.
   The N16R8's octal PSRAM takes GPIO35–37, but the pins above don't use those.
-  This board's RGB LED is on GPIO48. No ACC signal uses that pin, and our firmware
+  This board's RGB LED is on GPIO48. No ACC signal uses that pin, and my firmware
   will use it for status lights.
 - Put a 470 Ω resistor in series with every signal line (pins 3, 4, 5, 6,
   11 and 12), but not ground. On the lines from the radio it limits the
@@ -213,22 +211,26 @@ metered open to every other pin and the shell, as in [fuse-risk.md](fuse-risk.md
 2. **Pins 5 and 6:** with no heartbeat reply the radio may not send
    anything. Link pins 11 and 12 with a jumper (the radio accepts its own
    heartbeat echoed back) and look again. Expect CS going low for each
-   frame, 25 times a second, and a 2 MHz clock while it's low.
+   frame, 25 times a second, and a 2 MHz clock while it's low. The data
+   should start two or three seconds after the link goes on.
 3. **Pins 4 and 3:** data while CS is low. Note whether pin 3 is active,
    and whether it changes when the Sub receiver is on.
-4. If any level is above 3.3 V, stop and add level shifting before going
+4. **Take the link off.** The data on pins 4, 5 and 6 should stop within two
+   or three seconds, while pin 12 carries on once a second. That shows the
+   heartbeat reply is what turns it on.
+5. If any level is above 3.3 V, stop and add level shifting before going
    further.
 
 ## Where the code is
 
-| Source | Licence | What it gives us |
+| Source | Licence | What it gives me |
 |---|---|---|
 | [SLTPLAN/FTDX10_WF_HUB/ESP32](https://github.com/SLTPLAN/FTDX10_WF_HUB/tree/main/ESP32) | **None** (asked in [issue #1](https://github.com/SLTPLAN/FTDX10_WF_HUB/issues/1)) | Complete ESP32-S3 firmware `DX10_WF.ino` plus `remote.py` |
 | [SLTPLAN/FTDX10_WF](https://github.com/SLTPLAN/FTDX10_WF) | None | The PC side of the same project |
 | [ratmandu/YaesuWFTesting](https://github.com/ratmandu/YaesuWFTesting) | MIT | First published frame layout and test tools |
 | [CarrierWaveApp/sculan10-protocol](https://github.com/CarrierWaveApp/sculan10-protocol) | MIT | Written spec of the SCU-LAN10 protocol |
 | [sanjint.com/yaesu-ftdx10-scope](https://sanjint.com/yaesu-ftdx10-scope) | — | Write-up of the ACC signals on the FTdx10 |
-| YWC: `Ft710ScopeFrame` and the FT-710 scope path | Ours | The frame decoder and spectrum display we already have |
+| YWC: `Ft710ScopeFrame` and the FT-710 scope path | Mine | The frame decoder and spectrum display I already have |
 
 What SLTPLAN's firmware does:
 
@@ -267,9 +269,11 @@ little, but only enough to be a dumb pipe:
 - **Heartbeat:** the FT-710 answers its own heartbeat inside the radio; on
   the FTdx101 something outside has to. Either the ESP32 echoes `alive\0`
   back, or pins 11 and 12 are simply linked by a wire and the ESP32 needn't
-  touch them at all.
+  touch them at all. The reply has to arrive within 10 ms. The FTDX10
+  projects report that SPI starts after two or three answered heartbeats and
+  stops two or three seconds after the replies stop.
 
-That's a few dozen lines, so we don't need SLTPLAN's firmware or its
+That's a few dozen lines, so I don't need SLTPLAN's firmware or its
 licence. Their code stays useful for a bench comparison in step 3.
 
 What's left to check:
@@ -283,10 +287,10 @@ What's left to check:
   That's a new input class in `Yaesu_Sdr_Worker` beside `Ft4222Bridge`, not
   a new decoder.
 
-Rules for our own firmware:
+Rules for my own firmware:
 
 - Write it from scratch. Use the facts the other projects found (pins,
-  levels, timings, frame layout, the heartbeat) and our own scope captures,
+  levels, timings, frame layout, the heartbeat) and my own scope captures,
   but no one else's code, not even the MIT projects'. Facts about the
   protocol aren't anyone's property; their code is.
 - Credit SLTPLAN for showing that an ESP32-S3 can do it.
@@ -308,7 +312,7 @@ Rules for our own firmware:
    waterfall. Map the settings block (about 144 bytes at the end) by
    changing one control at a time on the radio and diffing captures.
    Work out what pin 3 carries.
-5. **Our own firmware.** The dumb pipe described above: SPI in, raw bytes
+5. **My own firmware.** The dumb pipe described above: SPI in, raw bytes
    out over USB CDC.
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
@@ -320,9 +324,13 @@ Rules for our own firmware:
 - Logic levels on the ACC pins: to be measured.
 - Does pin 3 carry the Sub receiver, or something else? The schematic calls
   it `ACC_MISO`, which points away from the Sub receiver.
-- What do `ACC_PTT` and `ACC_SEND` on pins 9 and 10 do? We don't need them, and
+- What do `ACC_PTT` and `ACC_SEND` on pins 9 and 10 do? I don't need them, and
   they aren't to be probed.
 - Does the radio need a menu setting before it streams to the ACC socket,
   as the FT-710 does (EX 03-01-26 SCU-LAN10)?
+- Firmware: one reseller says the SCU-LAN10 needs FTdx101 firmware of at least
+  MAIN V01-14, DISPLAY V01-06, IF DSP V01-05 and SDR V02-03. The ACC stream is
+  what the SCU-LAN10 uses, so if the radio doesn't stream with the link on,
+  check the firmware versions first.
 - Will the radio stream to the ESP32 and an SCU-LAN10 at the same time? Not
   needed now.

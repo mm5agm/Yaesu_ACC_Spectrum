@@ -38,7 +38,7 @@ ESP32-S3 DevKitC-1 N16R8 (Amazon UK B0F8N8LZ4G).
 |---|---|
 | Board marked | HW678 |
 | Pin that drives the RGB LED | GPIO48, GRB order, checked 2026-10-31 in the paddle work with `ledscan` (Adafruit NeoPixel library) |
-| Paddle wiring removed | |
+| Earlier wiring removed | Yes, bare board in [images/expansion-board.jpg](images/expansion-board.jpg) |
 
 ## Pin 8 check
 
