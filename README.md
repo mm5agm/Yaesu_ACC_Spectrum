@@ -27,9 +27,9 @@ information here may be wrong. Read [docs/fuse-risk.md](docs/fuse-risk.md) first
 
 The board is an ESP32-S3 DevKitC-1 N16R8, marked HW678, and its RGB LED is on GPIO48
 in GRB order, so it's free for status lights. It's an addressable LED, so it needs a
-data stream, not a plain high or low. The paddle firmware drives it with the
-[Adafruit NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel) library and keeps
-it dim, because it's dazzling at full power.
+data stream, not a plain high or low. It's driven with the
+[Adafruit NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel) library and kept
+dim, because it's dazzling at full power.
 
 Some boards differ: version 1.1 of the DevKitC-1 has its LED on GPIO38, which this
 project uses for pin 12. Check yours before wiring it. See "The cable and the board"
@@ -40,9 +40,18 @@ in [docs/plan.md](docs/plan.md).
 ![The ESP32-S3 on its screw-terminal board, with the ACC wires marked. Bottom row, the 3V3 to GND row: ACC pin 5 CLOCK (green wire) to GPIO10, pin 4 DATA2 (yellow) to GPIO11, pin 6 CS (blue) to GPIO13, pin 3 DATA1 (orange) to GPIO14, each through 330 ohms, and pin 2 GND (red) to the GND terminal at the end, no resistor. Top row: pin 11 CNT RX (pink) to GPIO39 and pin 12 CNT TX (light blue) to GPIO38, each through 330 ohms.](docs/images/acc-wiring.jpg)
 
 Every signal line has a 330 ohm resistor in series at the ESP32 end; ground doesn't.
-Pins 1, 7, 8, 9, 10 and 13 aren't connected. The details, and the checks to make
-before connecting anything, are in "Wiring to the ESP32-S3" in
-[docs/plan.md](docs/plan.md).
+
+These pins are **not connected**. Insulate each wire on its own, with heat-shrink:
+
+- Pin 1, brown: Power ON, the remote power-on line
+- Pin 7, purple: 3.3 V through 1k, which can't power anything
+- Pin 8, gray: 13.8 V behind a fuse
+- Pin 9, white: the radio's PTT line
+- Pin 10, black: the radio's SEND line
+- Pin 13, light green: a second ground; pin 2 is the one we use
+
+The details, and the checks to make before connecting anything, are in "Wiring to
+the ESP32-S3" in [docs/plan.md](docs/plan.md).
 
 ### Yes, ground is the red wire
 
@@ -57,8 +66,8 @@ The upside is that anyone who knows the code can read a wire's pin number from i
 colour. The downside is that the usual meanings don't apply:
 
 - **Red is ground.** Mark it GND with a label or a band of tape.
-- **Gray is 13.8 V** (pin 8), behind a fuse. Insulate it.
-- **Black is SEND** (pin 10), not ground. Insulate it.
+- **Gray is 13.8 V** (pin 8). It's not connected.
+- **Black is SEND** (pin 10), not ground. It's not connected.
 - Blue and light blue are different signals, and so are green and light green.
 
 Other leads may use other colours, so check yours with a meter before wiring.
