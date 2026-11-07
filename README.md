@@ -64,14 +64,24 @@ may help with the crosstalk SLTPLAN worked around by lowering the ESP32's drive
 strength on the pin 11 line.
 
 The fastest line is the 2 MHz SPI clock. Each half-cycle lasts 250 ns. With a short
-wire into the ESP32 (about 30 pF in all), the resistor slows each edge by roughly:
+wire into the ESP32 (about 30 pF in all), the resistor slows each edge by roughly
+the rise time below. The protection columns show the most current that can flow in
+two faults: a 3.3 V line shorted to ground or crossed with another line, and a line
+that turns out to be 5 V, pushing current into the ESP32's protection diodes. Less
+current is better.
 
-| Resistor | Edge rise time (10 to 90%) | Share of a half-cycle |
-|---|---|---|
-| 220 ohm | about 15 ns | 6% |
-| 330 ohm | about 22 ns | 9% |
-| 470 ohm | about 30 ns | 12% |
-| 1k | about 65 ns | 26%, still works but getting soft |
+| Resistor | Edge rise time (10 to 90%) | Share of a half-cycle | 3.3 V line shorted or crossed | Line at 5 V, into the ESP32 | Protection compared with 220 ohm |
+|---|---|---|---|---|---|
+| 220 ohm | about 15 ns | 6% | 15 mA | 7.7 mA | 1 x |
+| 330 ohm | about 22 ns | 9% | 10 mA | 5.2 mA | 1.5 x |
+| 470 ohm | about 30 ns | 12% | 7 mA | 3.6 mA | 2.1 x |
+| 1k | about 65 ns | 26%, still works but getting soft | 3.3 mA | 1.7 mA | 4.5 x |
+
+The 5 V figures assume the ESP32's pin is clamped at about 3.3 V. Espressif doesn't
+publish a safe current into a pin, so treat any 5 V line as a reason to stop and add
+level shifting, not something the resistor makes safe. No resistor protects against
+pin 8: 13.8 V through 470 ohm is still about 22 mA, which is why pin 8 isn't
+connected at all.
 
 Clock and data each have the same resistor, so they're delayed together and stay in
 step. Anything from 220 to 470 ohm is fine; the higher the value, the more
