@@ -55,6 +55,29 @@ each wire, one wire at a time, is all they need:
 The details, and the checks to make before connecting anything, are in "Wiring to
 the ESP32-S3" in [docs/plan.md](docs/plan.md).
 
+### Resistor value and the 2 MHz clock
+
+The resistors are there for protection while the radio's levels are still unknown.
+The FTDX10 projects this follows wire straight through with no resistors, and it
+works. A resistor at the ESP32 end also softens fast edges and damps ringing. That
+may help with the crosstalk SLTPLAN worked around by lowering the ESP32's drive
+strength on the pin 11 line.
+
+The fastest line is the 2 MHz SPI clock. Each half-cycle lasts 250 ns. With a short
+wire into the ESP32 (about 30 pF in all), the resistor slows each edge by roughly:
+
+| Resistor | Edge rise time (10 to 90%) | Share of a half-cycle |
+|---|---|---|
+| 220 ohm | about 15 ns | 6% |
+| 330 ohm | about 22 ns | 9% |
+| 470 ohm | about 30 ns | 12% |
+| 1k | about 65 ns | 26%, still works but getting soft |
+
+Clock and data each have the same resistor, so they're delayed together and stay in
+step. Anything from 220 to 470 ohm is fine; the higher the value, the more
+protection. If the scope shows rounded clock edges at the ESP32 pin, use a lower
+value on the clock line.
+
 ### Yes, ground is the red wire
 
 Red for ground looks like the last thing any sane person would do, but the colours
