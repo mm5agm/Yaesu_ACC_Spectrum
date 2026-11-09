@@ -226,9 +226,37 @@ Then use either of these.
 2. Under Program, leave the baud rate as it is and click **Connect**.
 3. Choose the ESP32's port from the list and click Connect. The page shows the
    chip, "ESP32-S3".
-4. Click **Erase Flash** and wait for it to finish. It takes about half a minute
-   for 16 MB.
+4. Click **Erase Flash** and wait for it to finish. It takes a few seconds.
 5. Click **Disconnect**.
+
+A good run looks like this (MAC address left out):
+
+```
+Serial port WebSerial VendorID 0x1a86 ProductID 0x55d3
+Connecting...
+Detecting chip type...
+ESP32-S3
+Chip is ESP32-S3 (QFN56) (revision v0.2)
+Features: Wi-Fi,BLE,Embedded PSRAM 8MB (AP_3v3)
+Crystal is 40MHz
+Uploading stub...
+Running stub...
+Stub running...
+Changing baudrate to 921600
+Changed
+Flash ID: 184068
+Erasing flash (this may take a while)...
+Chip erase completed successfully in 4.819s
+```
+
+The lines to check:
+
+- **VendorID 0x1a86** is WCH, the maker of the board's CH343 USB chip, so it's the
+  ESP32's port and not the radio's. The radio's Silicon Labs chip is 0x10c4.
+- **ESP32-S3** and **Embedded PSRAM 8MB** confirm the N16R8 board.
+- **Chip erase completed successfully** is the one that matters.
+
+Your revision, MAC address and timing may differ.
 
 **Option 2: esptool from the command line.** Install it once with
 `pip install esptool`, then run this, with your board's port in place of COM5:
