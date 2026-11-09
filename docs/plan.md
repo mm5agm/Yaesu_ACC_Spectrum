@@ -201,25 +201,10 @@ Notes:
 
 ## Before connecting the ESP32: check the levels
 
-The ESP32-S3 takes 3.3 V at most on any pin. With the Icom plug's wires taken
-to a breakout but nothing else attached, and the Siglent scope's ground on pin 2.
-The supply is off whenever the cable is plugged or unplugged, and pin 8 has been
-metered open to every other pin and the shell, as in [fuse-risk.md](fuse-risk.md):
-
-1. **Pin 12:** expect a burst once a second (the `alive\0` heartbeat, UART
-   at 115200). Note the high level.
-2. **Pins 5 and 6:** with no heartbeat reply the radio may not send
-   anything. Link pins 11 and 12 with a jumper (the radio accepts its own
-   heartbeat echoed back) and look again. Expect CS going low for each
-   frame, 25 times a second, and a 2 MHz clock while it's low. The data
-   should start two or three seconds after the link goes on.
-3. **Pins 4 and 3:** data while CS is low. Note whether pin 3 is active,
-   and whether it changes when the Sub receiver is on.
-4. **Take the link off.** The data on pins 4, 5 and 6 should stop within two
-   or three seconds, while pin 12 carries on once a second. That shows the
-   heartbeat reply is what turns it on.
-5. If any level is above 3.3 V, stop and add level shifting before going
-   further.
+The step-by-step procedure, with the scope settings and the pass and fail levels,
+is in "Safe first connection" in the [README](../README.md#safe-first-connection).
+In short: measure every line with the radio on and nothing else connected, and
+connect the ESP32 only if every line is 3.3 V or less.
 
 ## Where the code is
 
@@ -303,7 +288,8 @@ Rules for my own firmware:
    and the cable's pin-for-pin wiring together. Then insulate pins 1, 7, 8, 9,
    10 and 13, and meter pin 8 open to everything before the plug goes near the
    radio.
-2. **Levels.** Scope checks as above, nothing connected to the ESP32.
+2. **Levels.** Stage 1 of "Safe first connection" in the README, nothing
+   connected to the ESP32.
 3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
    wire it as in the table, and read frames with `remote.py` over USB.
    Confirm 25 frames a second and a waterfall that follows the radio.
