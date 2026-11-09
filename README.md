@@ -184,10 +184,9 @@ in [docs/bench-notes.md](docs/bench-notes.md) either way.
 ### Stage 2: adding the ESP32
 
 1. **Make sure the ESP32's pins are all inputs.** Old firmware on the board may
-   drive some of these GPIOs as outputs, so erase it first, with the radio's
-   cable nowhere near: `esptool.py --chip esp32s3 --port COMx erase_flash`,
-   using the ESP32's own port, never the radio's. After an erase, every GPIO
-   is an input. None of the GPIOs used here (10, 11, 13, 14, 38 and 39) is a
+   drive some of these GPIOs as outputs, so erase it first, as in
+   [Erasing the ESP32](#erasing-the-esp32) below. After an erase, every GPIO is
+   an input. None of the GPIOs used here (10, 11, 13, 14, 38 and 39) is a
    strapping pin, so the board starts normally with the radio connected.
 2. Pull the radio's DC lead. Connect the ESP32's GND terminal to pin 2 **first**,
    then the six resistor ends to their GPIOs, as in [Wiring](#wiring).
@@ -204,6 +203,51 @@ in [docs/bench-notes.md](docs/bench-notes.md) either way.
    first, with the DC lead out. Otherwise the radio's pin 12 and the ESP32 would
    both drive the same line. The 940 ohms keep that below 4 mA, but it's still a
    fault.
+
+### Erasing the ESP32
+
+Erasing wipes everything in the ESP32's flash, so it runs no program at all and
+every GPIO stays an input. Do it with the ESP32 off the breakout and nothing wired
+to its terminals except what's always there.
+
+**Find the ESP32's COM port first.** Plug the ESP32's **UART** socket into the PC
+with a USB data lead. Open Device Manager and look under "Ports (COM & LPT)". The
+board's port is the one that appears when you plug it in and goes when you unplug
+it. On a board with a CH343 chip it's named "USB-SERIAL CH343". **Never pick the
+radio's ports.** The Yaesu's ports are a pair named "Silicon Labs Dual CP2105" or
+"Silicon Labs CP210x", Enhanced and Standard. If in doubt, unplug the radio's USB
+lead while you do this.
+
+Then use either of these.
+
+**Option 1: in the browser, nothing to install.** This needs Chrome or Edge.
+
+1. Open Espressif's [ESP Tool](https://espressif.github.io/esptool-js/) page.
+2. Under Program, leave the baud rate as it is and click **Connect**.
+3. Choose the ESP32's port from the list and click Connect. The page shows the
+   chip, "ESP32-S3".
+4. Click **Erase Flash** and wait for it to finish. It takes about half a minute
+   for 16 MB.
+5. Click **Disconnect**.
+
+**Option 2: esptool from the command line.** Install it once with
+`pip install esptool`, then run this, with your board's port in place of COM5:
+
+```
+python -m esptool --chip esp32s3 --port COM5 erase-flash
+```
+
+Older versions of esptool, before 5.0, spell the command `erase_flash`.
+
+**If it can't connect** ("Failed to connect" or "No serial data received"), put
+the board into download mode by hand. Hold the **BOOT** button, press and release
+**RST**, then release BOOT, and try again. Once it's erased, press RST to restart
+the board.
+
+After an erase, the board's LED stays off. If you open a serial monitor on the
+UART port, the board repeats a line like `invalid header: 0xffffffff`. That's
+normal for an erased board. It means there's no program to run, which is what you
+want.
 
 ## Credits and background
 
