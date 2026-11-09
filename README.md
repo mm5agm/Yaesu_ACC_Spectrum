@@ -109,6 +109,102 @@ colour. The downside is that the usual meanings don't apply:
 
 Other leads may use other colours, so check yours with a meter before wiring.
 
+## Safe first connection
+
+The radio's levels on these pins are measured before anything is connected to them.
+The ESP32 goes on only once every line is known to be 3.3 V or less. There are two
+stages:
+
+1. **Stage 1:** the breakout on the radio, nothing else connected, and the
+   oscilloscope on each line.
+2. **Stage 2:** the radio powered off, the ESP32 connected, then power on and check
+   again.
+
+Three rules apply all the way through:
+
+- **Unplug the radio's DC lead before plugging or unplugging anything.** Switching
+  the radio off on its front panel isn't enough.
+- **Move probes and wires only with the DC lead out.** A probe that slips on a live
+  terminal can short two lines.
+- **The scope's ground clips go only on pin 2, the red wire.** A mains-powered
+  scope's ground is mains earth, so a ground clip on any other line shorts that line
+  to earth.
+
+### Before you start
+
+- Every unused wire (pins 1, 7, 8, 9, 10 and 13) has its own heat-shrink over the
+  end.
+- With the cable out of the radio, pin 8 meters open to every other pin and to the
+  shell. See [docs/fuse-risk.md](docs/fuse-risk.md).
+- The 470 ohm resistors can stay in place. With no ESP32 connected, no current flows
+  through them, so the far end of each resistor sits at the same voltage as the
+  radio's pin. A 10 Mohm scope probe draws less than a microamp, which drops less
+  than a millivolt across 470 ohms. Measuring at the free end of the resistor is
+  the same as measuring at the radio.
+- Set up each scope channel:
+  - Probe at 10X, and the channel set to 10X to match. Check this on the scope's
+    calibration output, which should read 3 V peak to peak.
+  - 1 V/div with the trace near the bottom of the screen, so the screen shows 0 to
+    about 7 V and a 5 V line can't go off the top.
+  - DC coupling.
+  - Trigger on the channel you're watching: rising edge, about 1.5 V, DC
+    coupling, Normal mode.
+
+### Stage 1: radio only, no ESP32
+
+1. With the DC lead out, plug the breakout into the ACC socket. Clip the probe
+   ground to pin 2, and put the probe tip on the free end of pin 12's resistor.
+2. Plug in the DC lead and switch the radio on. Wait for it to finish starting.
+3. **Pin 12 (CNT TX, out of the radio):** expect a short burst once a second. This
+   is the `alive` heartbeat: 6 bytes at 115200 baud, about 0.5 ms long, so try
+   1 ms/div. Note the high level.
+4. Switch off, pull the DC lead, and move the probe to the next line. Repeat for
+   **pin 11** (CNT RX, an input to the radio) and **pins 3, 4, 5 and 6** (the SPI
+   lines). Without a reply to the heartbeat, the SPI lines should stay idle. Note
+   each line's idle level. With a 4-channel scope, you can watch pins 12, 6, 5 and
+   4 at once, all ground clips on pin 2.
+5. **Link pins 11 and 12.** With the DC lead out, join the free ends of the pin 11
+   and pin 12 resistors with a short wire. The radio's heartbeat now comes back to
+   it through 940 ohms, which is the reply it wants. Power on and look again:
+   - Pin 12 still bursts once a second, and pin 11 shows the same burst.
+   - After two or three seconds, **pin 6 (CS)** goes low 25 times a second,
+     **pin 5 (CLK)** shows a 2 MHz clock while CS is low, and **pin 4 (DATA2)**
+     carries data. Note whether **pin 3** does anything, and whether that
+     changes with the Sub receiver on.
+   - Note the high level of every line.
+6. **Take the link off** (DC lead out first), power on, and watch pins 5 and 6.
+   The data should stop within two or three seconds, while pin 12 carries on once a
+   second. That shows the heartbeat reply is what turns the data on.
+
+**Pass:** every line's high level is 3.3 V or less. The ESP32-S3's absolute maximum
+is 3.6 V. **If any line goes above 3.6 V, stop.** Don't connect the ESP32. That line
+needs level shifting first, and the resistor doesn't make it safe. Write the levels
+in [docs/bench-notes.md](docs/bench-notes.md) either way.
+
+### Stage 2: adding the ESP32
+
+1. **Make sure the ESP32's pins are all inputs.** Old firmware on the board may
+   drive some of these GPIOs as outputs, so erase it first, with the radio's
+   cable nowhere near: `esptool.py --chip esp32s3 --port COMx erase_flash`,
+   using the ESP32's own port, never the radio's. After an erase, every GPIO
+   is an input. None of the GPIOs used here (10, 11, 13, 14, 38 and 39) is a
+   strapping pin, so the board starts normally with the radio connected.
+2. Pull the radio's DC lead. Connect the ESP32's GND terminal to pin 2 **first**,
+   then the six resistor ends to their GPIOs, as in [Wiring](#wiring).
+3. Leave the pin 11 to pin 12 link on, so the radio streams while the ESP32
+   only listens.
+4. **Power the ESP32 first:** plug its USB lead into the PC. Then plug in the
+   radio's DC lead and switch on. When finishing, switch the radio off first and
+   the ESP32 last. That way, the radio never drives a line into an ESP32 that has
+   no power. An unpowered ESP32 would be fed through its protection diodes.
+5. Repeat the checks from stage 1, step 5, with the probes at the ESP32 terminals.
+   The levels should be the same as before, and the edges a little softer. The
+   data should still start after two or three seconds.
+6. When firmware takes over the heartbeat reply on GPIO39, take the link off
+   first, with the DC lead out. Otherwise the radio's pin 12 and the ESP32 would
+   both drive the same line. The 940 ohms keep that below 4 mA, but it's still a
+   fault.
+
 ## Credits and background
 
 This project builds on other people's work on the FTDX10 and FT-710. ratmandu
@@ -153,8 +249,8 @@ goes into YWC as a serial input beside `Ft4222Bridge`.
   is 13.8 V behind a fuse, and pins 9 and 10 are the PTT and SEND lines. ACC pins
   1, 7, 8, 9, 10 and 13 are never connected.
 - **Plug and unplug with the supply off.**
-- **Check the levels before connecting the ESP32.** See "Before connecting the
-  ESP32" in the plan.
+- **Check the levels before connecting the ESP32.** Follow
+  [Safe first connection](#safe-first-connection).
 - **Use the S3's native USB.** The stream is 102.4 kB/s, more than a USB-serial
   chip at 921600 baud can carry.
 - **Tools never open COM3 or COM4.** Those are the radio's ports. Name the
