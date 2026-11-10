@@ -1,0 +1,5 @@
+# Python packages for the scripts in tools/. Install them with:
+#     python -m pip install -r tools/requirements.txt
+# Versions are pinned so the instructions in the README match what you get.
+esptool==5.6.0   # erases and flashes the ESP32; brings pyserial with it
+pillow==12.3.0   # scope_shot.py saves the scope's screenshots as PNG
