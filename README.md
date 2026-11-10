@@ -283,9 +283,12 @@ Every trace from the bench goes here, so anyone checking the work can see what e
 ACC line does on an FTdx101MP. They're taken on my Siglent SDS1104X-E with the
 probe at 10X, DC coupling, and the ground clip on pin 2, and read off the scope
 over its LAN port with [tools/scope_shot.py](tools/scope_shot.py). Cursors are
-off. Each picture is saved under its own name in
-[docs/images/scope/](docs/images/scope/), and the measured numbers go in the
-Levels table in [docs/bench-notes.md](docs/bench-notes.md).
+off. The script names each picture from the ACC pins on the channels that are
+switched on, the timebase and the time, such as
+`link_pin6-cs_pin5-clk_2us_2026-11-10_1435.png`, and never overwrites one. The
+traces in the tables below use the names given there instead, with `--name`.
+The pictures are in [docs/images/scope/](docs/images/scope/), and the measured
+numbers go in the Levels table in [docs/bench-notes.md](docs/bench-notes.md).
 
 A trace that hasn't been taken yet is marked "to do". Its picture goes in when it's
 taken, with a line saying what it shows.
