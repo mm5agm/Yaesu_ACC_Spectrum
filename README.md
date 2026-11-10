@@ -229,10 +229,10 @@ Erasing wipes everything in the ESP32's flash, so it runs no program at all and
 every GPIO stays an input. Do it with the ESP32 off the breakout and nothing wired
 to its terminals except what's always there.
 
-**Find the ESP32's COM port first.** Plug the ESP32's **UART** socket into the PC
-with a USB data lead. Open Device Manager and look under "Ports (COM & LPT)". The
+**Find the ESP32's COM port first.** Plug the ESP32's **UART** socket, marked
+**COM** on my board, into the PC with a USB data lead. Open Device Manager and look under "Ports (COM & LPT)". The
 board's port is the one that appears when you plug it in and goes when you unplug
-it. On a board with a CH343 chip it's named "USB-SERIAL CH343". **Never pick the
+it. On a board with a CH343 chip it's named "USB-Enhanced-SERIAL CH343". **Never pick the
 radio's ports.** The Yaesu's ports are a pair named "Silicon Labs Dual CP2105" or
 "Silicon Labs CP210x", Enhanced and Standard. If in doubt, unplug the radio's USB
 lead while you do this.
@@ -277,8 +277,60 @@ The lines to check:
 
 Your revision, MAC address and timing may differ.
 
-**Option 2: esptool from the command line.** Install it once with
-`pip install esptool`, then run this, with your board's port in place of COM5:
+**Option 2: the erase script in this repository.** It needs Python 3.10 or later.
+Install the tools once, from the top folder of the repository:
+
+```
+python -m pip install -r tools/requirements.txt
+```
+
+That installs the pinned esptool version, and Pillow for the scope script. To keep
+them apart from your other Python packages, make a virtual environment first with
+`python -m venv .venv` and use `.venv\Scripts\python` (on Windows) in place of
+`python`. Then run:
+
+```
+python tools/erase_esp32.py
+```
+
+Start with the board unplugged. The script lists the serial ports, then waits
+for you to plug the board's UART (COM) socket in, and takes the one port that
+appears. That's the board in your hand, even if something else with the same USB
+chip is plugged in. Then it:
+
+1. **Keeps esptool off anything that may be a radio.** It only goes on if the
+   port's USB chip is WCH's (0x1A86, the board's CH343) or Espressif's (0x303A),
+   and never on COM3 or COM4. Asking a chip what it is pulses DTR and RTS, and on
+   a radio's port those can key the transmitter. The Yaesu's ports are Silicon
+   Labs (0x10C4), so they're never touched.
+2. **Asks the chip what it is,** and stops unless it's an ESP32-S3. Anything
+   that isn't an ESP32 can't answer, so it's never erased.
+3. **Shows the chip, flash size, PSRAM and MAC address** and asks you to type
+   `yes`.
+4. Runs esptool's erase.
+
+`python tools/erase_esp32.py --list` only lists the ports and their USB IDs, and
+`--port COM5` names the port instead of plugging in, with the same checks.
+
+A good run on my board, with the MAC address left out:
+
+```
+Port: COM5  1A86:55D3  USB-Enhanced-SERIAL CH343 (COM5)
+
+Asking the chip what it is: -m esptool --port COM5 flash-id
+It's an ESP32-S3:
+  Chip type:          ESP32-S3 (QFN56) (revision v0.2)
+  Features:           Wi-Fi, BT 5 (LE), Dual Core + LP Core, 240MHz, Embedded PSRAM 8MB (AP_3v3)
+  Detected flash size: 16MB
+
+Erasing wipes all of the flash on COM5.
+Erase it? Type yes: yes
+...
+Erasing flash memory (this may take a while)...
+Flash memory erased successfully in 2.7 seconds.
+```
+
+To run esptool yourself, with your board's port in place of COM5:
 
 ```
 python -m esptool --chip esp32s3 --port COM5 erase-flash

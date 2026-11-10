@@ -111,14 +111,14 @@ are green and light green.
 B0F8N8LZ4G). Anything still wired to it from earlier work comes off first.
 
 - It normally has two USB sockets. Use the one marked USB, the S3's native USB, not
-  the one marked UART.
+  the one marked UART, which is marked COM on mine.
 - Its RGB LED is on GPIO48, found by scanning the pins one at a time. So GPIO38 is
   free for the heartbeat. Version
   1.1 of the DevKitC-1 has the LED on GPIO38, so another board may differ. It's an
   addressable RGB LED in GRB order, so it takes a data stream, not a plain high or low.
   Drive it with the Adafruit NeoPixel library, kept dim. The core's `neopixelWrite()`
   only ever drives the first pin it was called with, which is no good for a scan.
-- The UART socket is the board's CH343 port, COM5 on this PC. Flashing tools are pinned
+- The UART (COM) socket is the board's CH343 port, COM5 on this PC. Flashing tools are pinned
   to the board's port by name, because COM3 and COM4 are the radio's.
 
 ## Pins I need
