@@ -342,9 +342,12 @@ Rules for my own firmware:
 
 ## Open questions
 
-- Logic levels on the ACC pins: to be measured.
-- Does pin 3 carry the Sub receiver, or something else? The schematic calls
-  it `ACC_MISO`, which points away from the Sub receiver.
+- ~~Logic levels on the ACC pins.~~ Measured 2026-11-10: all 3.3 to 3.4 V. See
+  the Levels table in [bench-notes.md](bench-notes.md).
+- ~~Does pin 3 carry the Sub receiver?~~ No. On 2026-11-10 it carried no data
+  with the Sub receiver on or off, so both waterfalls come on DATA2. The
+  schematic calls it `ACC_MISO`, so it's probably the line a listener uses to
+  send to the radio.
 - What do `ACC_PTT` and `ACC_SEND` on pins 9 and 10 do? I don't need them, and
   they aren't to be probed.
 - Does the radio need a menu setting before it streams to the ACC socket,
