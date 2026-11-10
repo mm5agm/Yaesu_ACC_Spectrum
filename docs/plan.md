@@ -259,7 +259,19 @@ little, but only enough to be a dumb pipe:
   stops two or three seconds after the replies stop.
 
 That's a few dozen lines, so I don't need SLTPLAN's firmware or its
-licence. Their code stays useful for a bench comparison in step 3.
+licence.
+
+**I go straight to my own firmware, without flashing SLTPLAN's first.** Decided
+on 2026-11-10, after both stages of the level checks passed:
+
+- The hardware is already proven. The scope showed CS, CLOCK and DATA2 working
+  at the ESP32's own terminals, so a known-good firmware would add nothing.
+- SLTPLAN's firmware answers the heartbeat itself. With the 11 to 12 link on,
+  it and the radio would both drive pin 11, so the link would have to come off
+  just to test someone else's code.
+- It keeps this repository clear of their unlicensed code, even as a test.
+
+If my firmware gets no frames, theirs is still there to help find out why.
 
 What's left to check:
 
@@ -291,16 +303,33 @@ Rules for my own firmware:
 2. **Levels.** Stage 1 of "Safe first connection" in the README, nothing
    connected to the ESP32. Then stage 2, with the erased ESP32 connected. **Both
    passed on 2026-11-10;** see docs/bench-notes.md.
-3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
-   wire it as in the table, and read frames with `remote.py` over USB.
-   Confirm 25 frames a second and a waterfall that follows the radio.
-4. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
+3. **My own firmware, first version.** The dumb pipe described above, in
+   `firmware/`, built with PlatformIO (the toolchain YWC_IWC_PADDLE uses):
+   - SPI slave on GPIO10 (clock), GPIO11 (DATA2) and GPIO13 (CS), with DMA.
+     GPIO14 (DATA1) is left as a plain input; it carries nothing so far.
+   - Raw bytes out over the native USB (the socket marked USB), unchanged.
+     The stream is 102.4 kB/s, more than a USB-serial link at 921600 baud
+     can carry.
+   - The heartbeat is left to the link on terminals 38 and 39. GPIO38 and
+     GPIO39 stay inputs, so nothing else drives the line.
+   - **SPI mode is a setting.** The clock idles high, so it's mode 2 or 3, and
+     I don't yet know which edge the radio changes the data on. Build both and
+     keep the one whose frames make sense.
+   - Flash it through the COM socket with the radio's DC lead out, move the
+     lead to the USB socket, then power up in the usual order: ESP32 first,
+     then the radio.
+4. **Check the frames.** A script in `tools/` that reads the native USB port
+   (found the same way as in `erase_esp32.py`, never COM3 or COM4) and
+   reports frames a second, frame length, and whether each frame ends with
+   the FT-710's `FF 01 EE 01` trailer. It should be 25 frames a second of
+   4096 bytes. If the trailer isn't there, the firmware marks each CS rising
+   edge instead, so the frames can still be found. Save a few seconds of raw
+   bytes in `captures/` for the next step.
+5. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
    (bit-inverted, they're in wfview's format), 850–1699 the Sub
    waterfall. Map the settings block (about 144 bytes at the end) by
    changing one control at a time on the radio and diffing captures.
    Work out what pin 3 carries.
-5. **My own firmware.** The dumb pipe described above: SPI in, raw bytes
-   out over USB CDC.
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
    frequency and span come from CAT, as they do for the FT-710. Then the
