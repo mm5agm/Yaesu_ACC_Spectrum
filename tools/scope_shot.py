@@ -19,12 +19,14 @@ each channel's ACC pin and the breakout terminal it's on, to check against the
 probes.
 
 The screenshot goes to docs/images/scope/<name>.png and the samples, if asked
-for, to captures/scope/<name>-C1.csv and so on, as time in seconds and volts.
+for, to captures/scope/<name>-C1.csv.gz and so on, as time in seconds and volts,
+gzipped to keep the repository small.
 An existing picture is never overwritten: a -2, -3 and so on is added.
 Cursors are switched off first so they don't cover the trace.
 """
 
 import argparse
+import gzip
 import re
 import socket
 import sys
@@ -199,9 +201,9 @@ def main():
         if not re.fullmatch(r"C[1-4]", channel):
             sys.exit(f"{channel} isn't a channel (C1 to C4)")
         times, volts, step = scope.samples(channel, args.step)
-        csv = REPO / "captures" / "scope" / f"{args.name}-{channel}.csv"
+        csv = REPO / "captures" / "scope" / f"{args.name}-{channel}.csv.gz"
         csv.parent.mkdir(parents=True, exist_ok=True)
-        with csv.open("w", encoding="ascii") as f:
+        with gzip.open(csv, "wt", encoding="ascii") as f:
             f.write("seconds,volts\n")
             for t, v in zip(times, volts):
                 f.write(f"{t:.9g},{v:.4f}\n")

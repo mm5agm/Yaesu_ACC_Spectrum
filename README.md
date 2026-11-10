@@ -8,7 +8,9 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
-Status: **investigation, nothing built and nothing measured on the radio yet.**
+Status: **investigation. Stage 1 of the level checks passed on 2026-11-10: every
+line is 3.3 to 3.4 V, and the radio streams when its heartbeat is answered.
+Nothing built yet.** See [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
 The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
@@ -298,10 +300,12 @@ want.
 
 Every trace from the bench goes here, so anyone checking the work can see what each
 ACC line does on an FTdx101MP. They're taken on my Siglent SDS1104X-E with the
-probe at 10X, DC coupling, and the ground clip on ACC pin 2, and read off the
-scope over its LAN port with [tools/scope_shot.py](tools/scope_shot.py), with the
-cursors off. The pictures are in [docs/images/scope/](docs/images/scope/), and the
-measured numbers go in the Levels table in [docs/bench-notes.md](docs/bench-notes.md).
+probe at 10X, 1 V/div, DC coupling, and the ground on ACC pin 2, and read off the
+scope over its LAN port with [tools/scope_shot.py](tools/scope_shot.py). The
+pictures are in [docs/images/scope/](docs/images/scope/), the samples behind them
+in [captures/scope/](captures/scope/), and the measured numbers in the Levels table
+in [docs/bench-notes.md](docs/bench-notes.md). In every picture the bottom
+graticule line is 0 V and each division up is 1 V.
 
 **Pin numbers are ACC socket pins.** The probe goes on the breakout board's
 terminal for that pin, shown in brackets, at the free end of the pin's 470 ohm
@@ -309,53 +313,102 @@ resistor. See the table in [Wiring](#wiring).
 
 **File names.** The script names each picture from the ACC pin on each channel,
 a note of what it shows, the timebase and the time it was taken, for example
-`acc-pin12-cnt-tx_burst_100us_2026-11-10_1432.png`. Pictures are never
-overwritten. The command for each trace is in the tables below. Before saving,
-the script prints each channel's ACC pin and terminal, to check against where the
-probes are.
+`acc-pin12-cnt-tx_burst_100us_2026-11-10_1107.png`. Pictures are never
+overwritten. Before saving, the script prints each channel's ACC pin and
+terminal, to check against where the probe is.
 
-A trace that hasn't been taken yet is marked "to do". Its picture goes in when it's
-taken, with a line saying what it shows.
+Taken on 2026-11-10 with one probe, the ESP32 module out of the board, and the
+long ground lead unless it says otherwise.
 
 ### Stage 1, no link: what the radio sends on its own
 
-Nothing connected to the ESP32, and no 11-12 link. Each command starts
-`python tools/scope_shot.py`.
+**ACC pin 12 (terminal 38), CNT TX, the heartbeat.** The line idles high at
+3.36 V and drops for a short burst once a second.
 
-| Trace | Probes: ACC pin (terminal) | Timebase | Command | Status |
-|---|---|---|---|---|
-| The heartbeat once a second | C1: 12 (38) | 200 ms/div | `--acc C1=12 --note once-a-second` | To do |
-| One whole `alive` burst | C1: 12 (38) | 100 us/div | `--acc C1=12 --note burst --samples C1` | To do |
-| The first byte, `a` (0x61), bit by bit | C1: 12 (38) | 10 us/div | `--acc C1=12 --note first-byte --samples C1` | To do |
-| CNT RX idle | C1: 11 (39) | 200 ms/div | `--acc C1=11 --note idle` | To do |
-| The SPI lines idle | C1: 5 (10), C2: 6 (13), C3: 4 (11), C4: 3 (14) | 200 ms/div | `--acc C1=5 C2=6 C3=4 C4=3 --note idle` | To do |
+![ACC pin 12 at 200 ms/div: a steady line at 3.36 V with a thin dip once a second.](docs/images/scope/acc-pin12-cnt-tx_once-a-second_200ms_2026-11-10_1107.png)
+
+One whole burst, about 500 us long:
+
+![ACC pin 12 at 100 us/div: one burst of serial data about 5 divisions long.](docs/images/scope/acc-pin12-cnt-tx_burst_100us_2026-11-10_1107.png)
+
+The first byte, bit by bit: start bit, then `a` (0x61) least significant bit
+first, 1 0 0 0 0 1 1 0, then the stop bit. Each bit is 8.5 us, about 117,660
+baud. The next byte, `l`, starts at the right-hand edge. The whole burst decodes
+as `alive` and a zero byte.
+
+![ACC pin 12 at 10 us/div: the start bit, the eight bits of 0x61 and the stop bit, then the start of the next byte.](docs/images/scope/acc-pin12-cnt-tx_first-byte_10us_2026-11-10_1108.png)
+
+**The other lines, idle.** With no reply to the heartbeat, every other line sits
+high and still, between 3.31 and 3.38 V.
+
+| ACC pin (terminal) | Signal | Idle level | Picture |
+|---|---|---|---|
+| 11 (39) | CNT RX | 3.37 V | [acc-pin11-cnt-rx_idle](docs/images/scope/acc-pin11-cnt-rx_idle_200ms_2026-11-10_1114.png) |
+| 6 (13) | CS | 3.31 V | [acc-pin6-cs_idle](docs/images/scope/acc-pin6-cs_idle_200ms_2026-11-10_1110.png) |
+| 5 (10) | CLOCK | 3.32 V | [acc-pin5-clk_idle](docs/images/scope/acc-pin5-clk_idle_200ms_2026-11-10_1111.png) |
+| 4 (11) | DATA2 | 3.31 V | [acc-pin4-data2_idle](docs/images/scope/acc-pin4-data2_idle_200ms_2026-11-10_1112.png) |
+| 3 (14) | DATA1 | 3.34 V | [acc-pin3-data1_idle](docs/images/scope/acc-pin3-data1_idle_200ms_2026-11-10_1109.png) |
 
 ### Stage 1, link on: the radio streams
 
-ACC pins 11 and 12 linked (terminals 39 and 38), still nothing connected to the
-ESP32.
+ACC pins 11 and 12 linked (terminals 39 and 38), so the radio's heartbeat comes
+back to it.
 
-| Trace | Probes: ACC pin (terminal) | Timebase | Command | Status |
-|---|---|---|---|---|
-| The same burst on both | C1: 12 (38), C2: 11 (39) | 100 us/div | `--acc C1=12 C2=11 --note link-burst` | To do |
-| The data starting after power-on | C1: 12 (38), C2: 6 (13) | 500 ms/div | `--acc C1=12 C2=6 --note link-start` | To do |
-| CS low 25 times a second | C1: 6 (13) | 10 ms/div | `--acc C1=6 --note link-25hz` | To do |
-| The start of one frame | C1: 6 (13), C2: 5 (10) | 2 us/div | `--acc C1=6 C2=5 --note link-frame-start` | To do |
-| The 2 MHz clock | C1: 5 (10) | 200 ns/div | `--acc C1=5 --note link-clock --samples C1` | To do |
-| The first bytes of a frame | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note link-first-bytes --samples C1 C2 C3` | To do |
-| DATA1, Sub receiver off | C1: 6 (13), C2: 3 (14) | 2 us/div | `--acc C1=6 C2=3 --note link-sub-off` | To do |
-| DATA1, Sub receiver on | C1: 6 (13), C2: 3 (14) | 2 us/div | `--acc C1=6 C2=3 --note link-sub-on` | To do |
-| Link off: the heartbeat carries on, CS stops | C1: 12 (38), C2: 6 (13) | 1 s/div | `--acc C1=12 C2=6 --note link-off` | To do |
+**ACC pin 6 (terminal 13), CS.** Low 25 times a second: 25.002 Hz, low for
+36.54 ms and high for 3.45 ms. Each low is one 4096-byte frame.
 
-### Stage 2: at the ESP32's terminals
+![ACC pin 6 at 10 ms/div: low for most of each 40 ms cycle, with a short high between frames.](docs/images/scope/acc-pin6-cs_link-25hz_10ms_2026-11-10_1205.png)
 
-The ESP32 erased and powered, the link still on, probes on the same terminals
-with the ESP32 now in the board.
+**ACC pin 5 (terminal 10), CLOCK.** 1.97 MHz, in bursts of 8 clocks, one burst a
+byte, with a gap between bytes. A byte every 8.9 us, so 4096 bytes take 36.5 ms,
+which matches CS. The edges ring, to 3.72 V and -0.40 V; see the note under
+DATA1.
 
-| Trace | Probes: ACC pin (terminal) | Timebase | Command | Status |
-|---|---|---|---|---|
-| The first bytes of a frame, to compare with stage 1 | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note esp32-first-bytes --samples C1 C2 C3` | To do |
-| The clock edges into the ESP32 | C1: 5 (10) | 200 ns/div | `--acc C1=5 --note esp32-clock --samples C1` | To do |
+![ACC pin 5 at 200 ns/div: the 2 MHz clock, with ringing on each edge.](docs/images/scope/acc-pin5-clk_link-clock_200ns_2026-11-10_1207.png)
+
+![ACC pin 5 at 10 us/div: bursts of 8 clocks with a gap between each.](docs/images/scope/acc-pin5-clk_link-clock-bursts_10us_2026-11-10_1207.png)
+
+**ACC pin 4 (terminal 11), DATA2.** This is the data. In each 40 ms cycle it
+switches for about 27.8 ms, then stays low for about 12.2 ms. CS is high for
+3.45 ms of that, so the last 8.7 ms or so of each frame, about 980 bytes, is
+zeros.
+
+![ACC pin 4 at 10 us/div: data bytes switching between 0 and 3.3 V.](docs/images/scope/acc-pin4-data2_link-data_10us_2026-11-10_1212.png)
+
+![ACC pin 4 at 10 ms/div: about 28 ms of data, then about 12 ms low, in each frame.](docs/images/scope/acc-pin4-data2_link-frames_10ms_2026-11-10_1212.png)
+
+**ACC pin 3 (terminal 14), DATA1.** No data, with the Sub receiver on or off. It
+stays high, with about 0.3 V of ripple that follows the frames: crosstalk from
+the clock and DATA2 wires beside it. These two were taken with the probe's short
+ground spring instead of the long lead, and the ripple still peaks at about
+3.9 V, so some of the ringing on the clock and data is coupling between the
+cable's wires, not only the probe's ground lead.
+
+![ACC pin 3 at 10 ms/div, Sub receiver on: high, with frame-shaped ripple.](docs/images/scope/acc-pin3-data1_link-sub-on-spring_10ms_2026-11-10_1215.png)
+
+![ACC pin 3 at 10 ms/div, Sub receiver off: the same.](docs/images/scope/acc-pin3-data1_link-sub-off-spring_10ms_2026-11-10_1218.png)
+
+### Stage 1, link off: the data stops
+
+Link taken off. CS stays high for the 14 seconds on screen, and DATA1's ripple has
+gone, so the radio sends no frames. The heartbeat reply is what turns the data on.
+
+![ACC pin 6 at 1 s/div with the link off: high and still.](docs/images/scope/acc-pin6-cs_link-off_1s_2026-11-10_1224.png)
+
+![ACC pin 3 at 10 ms/div with the link off: high, no ripple.](docs/images/scope/acc-pin3-data1_link-off_10ms_2026-11-10_1223.png)
+
+### Still to take
+
+These need two probes at once, or the ESP32 in the board.
+
+| Trace | Probes: ACC pin (terminal) | Timebase | Command, after `python tools/scope_shot.py` |
+|---|---|---|---|
+| The same burst on 12 and 11, link on | C1: 12 (38), C2: 11 (39) | 100 us/div | `--acc C1=12 C2=11 --note link-burst` |
+| The data starting after power-on | C1: 12 (38), C2: 6 (13) | 500 ms/div | `--acc C1=12 C2=6 --note link-start` |
+| The start of one frame | C1: 6 (13), C2: 5 (10) | 2 us/div | `--acc C1=6 C2=5 --note link-frame-start` |
+| The first bytes of a frame | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note link-first-bytes --samples C1 C2 C3` |
+| Stage 2: the first bytes at the ESP32 | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note esp32-first-bytes --samples C1 C2 C3` |
+| Stage 2: the clock edges into the ESP32 | C1: 5 (10) | 200 ns/div | `--acc C1=5 --note esp32-clock --samples C1` |
 
 ## Comparing with my RSP1 and RSP1B
 
