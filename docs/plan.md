@@ -289,7 +289,8 @@ Rules for my own firmware:
    10 and 13, and meter pin 8 open to everything before the plug goes near the
    radio.
 2. **Levels.** Stage 1 of "Safe first connection" in the README, nothing
-   connected to the ESP32.
+   connected to the ESP32. Then stage 2, with the erased ESP32 connected. **Both
+   passed on 2026-11-10;** see docs/bench-notes.md.
 3. **Bench run.** Flash SLTPLAN's firmware unchanged onto the ESP32-S3,
    wire it as in the table, and read frames with `remote.py` over USB.
    Confirm 25 frames a second and a waterfall that follows the radio.
