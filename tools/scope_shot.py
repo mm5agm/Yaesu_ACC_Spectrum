@@ -3,17 +3,20 @@
 Talks to the scope over its LAN port (SCPI on TCP port 5025). It never opens a
 serial port.
 
-Say which ACC pin each channel's probe is on, and the script names the picture
-from that, the timebase and the time it was taken:
+Pin numbers are always the radio's ACC socket pins, as in the radio's manual,
+never the breakout board's terminal numbers (those are GPIO numbers). Say which
+ACC pin each channel's probe is on, and what the shot shows, and the script
+names the picture from that, the timebase and the time it was taken:
 
-    python tools/scope_shot.py --pins C1=12
-        -> pin12-cnt-tx_100us_2026-11-10_1432.png
-    python tools/scope_shot.py --pins C1=6 C2=5 --note link --samples C1 C2
-        -> link_pin6-cs_pin5-clk_2us_2026-11-10_1435.png
+    python tools/scope_shot.py --acc C1=12 --note burst
+        -> acc-pin12-cnt-tx_burst_100us_2026-11-10_1432.png
+    python tools/scope_shot.py --acc C1=6 C2=5 --note link-frame-start --samples C1 C2
+        -> acc-pin6-cs_acc-pin5-clk_link-frame-start_2us_2026-11-10_1435.png
 
-Only channels switched on at the scope go in the name. A channel without a pin
-is named by its channel, such as c3. Give --name to use a name from the README's
-trace list instead, such as --name pin12-burst.
+Only channels switched on at the scope go in the name. A channel switched on
+without --acc is named by its channel, such as c3. Before saving, it prints
+each channel's ACC pin and the breakout terminal it's on, to check against the
+probes.
 
 The screenshot goes to docs/images/scope/<name>.png and the samples, if asked
 for, to captures/scope/<name>-C1.csv and so on, as time in seconds and volts.
@@ -31,13 +34,14 @@ from pathlib import Path
 from PIL import Image
 
 REPO = Path(__file__).resolve().parent.parent
+# ACC socket pin -> (name part, breakout terminal). Terminals are GPIO numbers.
 SIGNALS = {
-    "3": "pin3-data1",
-    "4": "pin4-data2",
-    "5": "pin5-clk",
-    "6": "pin6-cs",
-    "11": "pin11-cnt-rx",
-    "12": "pin12-cnt-tx",
+    "3": ("acc-pin3-data1", "14"),
+    "4": ("acc-pin4-data2", "11"),
+    "5": ("acc-pin5-clk", "10"),
+    "6": ("acc-pin6-cs", "13"),
+    "11": ("acc-pin11-cnt-rx", "39"),
+    "12": ("acc-pin12-cnt-tx", "38"),
 }
 PREFIX = {"G": 1e9, "M": 1e6, "k": 1e3, "": 1.0, "m": 1e-3, "u": 1e-6, "n": 1e-9}
 
@@ -114,23 +118,34 @@ def parse_pins(items):
     for item in items:
         match = re.fullmatch(r"([Cc][1-4])=(\d+)", item)
         if not match:
-            sys.exit(f"{item!r}: write it as C1=12")
+            sys.exit(f"{item!r}: write it as C1=12, with the ACC socket pin")
         pin = match.group(2)
         if pin not in SIGNALS:
-            sys.exit(f"pin {pin} isn't one of the probed ACC pins "
+            sys.exit(f"ACC pin {pin} isn't one of the probed ACC pins "
                      f"({', '.join(sorted(SIGNALS, key=int))})")
-        pins[match.group(1).upper()] = SIGNALS[pin]
+        pins[match.group(1).upper()] = pin
     return pins
 
 
 def auto_name(scope, pins, note):
     from datetime import datetime
-    parts = [note] if note else []
+    parts = []
     for channel in ("C1", "C2", "C3", "C4"):
         if scope.channel_on(channel):
-            parts.append(pins.get(channel, channel.lower()))
-    if len(parts) == (1 if note else 0):
+            pin = pins.get(channel)
+            if pin:
+                part, terminal = SIGNALS[pin]
+                print(f"{channel}: ACC pin {pin}, breakout terminal {terminal}")
+                parts.append(part)
+            else:
+                print(f"{channel}: on, no --acc pin given")
+                parts.append(channel.lower())
+        elif channel in pins:
+            sys.exit(f"{channel} has --acc {channel}={pins[channel]} but it's off at the scope")
+    if not parts:
         sys.exit("no channel is switched on at the scope")
+    if note:
+        parts.append(note)
     parts.append(timebase_label(scope.number("TDIV?")))
     parts.append(datetime.now().strftime("%Y-%m-%d_%H%M"))
     return "_".join(parts)
@@ -147,10 +162,10 @@ def unused(name):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--pins", nargs="*", default=[], metavar="CH=PIN",
-                        help="the ACC pin on each channel, e.g. C1=6 C2=5")
-    parser.add_argument("--note", help="a word for the start of the name, e.g. link")
-    parser.add_argument("--name", help="use this name instead, e.g. pin12-burst")
+    parser.add_argument("--acc", nargs="*", default=[], metavar="CH=PIN",
+                        help="the ACC socket pin (not the terminal) on each channel, "
+                             "e.g. C1=6 C2=5")
+    parser.add_argument("--note", help="what the shot shows, e.g. burst or link-frame-start")
     parser.add_argument("--host", default="192.168.68.71")
     parser.add_argument("--samples", nargs="*", default=[], metavar="CH",
                         help="channels to save as CSV, e.g. C1 C2")
@@ -158,14 +173,13 @@ def main():
                         help="keep every Nth sample (default every one)")
     args = parser.parse_args()
 
-    pins = parse_pins(args.pins)
-    for given in (args.name, args.note):
-        if given is not None and not re.fullmatch(r"[a-z0-9-]+", given):
-            sys.exit("use lower case letters, digits and hyphens in --name and --note")
+    pins = parse_pins(args.acc)
+    if args.note is not None and not re.fullmatch(r"[a-z0-9-]+", args.note):
+        sys.exit("use lower case letters, digits and hyphens in --note")
 
     scope = Scope(args.host)
     scope.send("CRMS OFF")
-    args.name = unused(args.name or auto_name(scope, pins, args.note))
+    args.name = unused(auto_name(scope, pins, args.note))
 
     png = REPO / "docs" / "images" / "scope" / f"{args.name}.png"
     png.parent.mkdir(parents=True, exist_ok=True)
