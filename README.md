@@ -8,9 +8,9 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
-Status: **investigation. Stage 1 of the level checks passed on 2026-11-10: every
-line is 3.3 to 3.4 V, and the radio streams when its heartbeat is answered.
-Nothing built yet.** See [Oscilloscope traces](#oscilloscope-traces).
+Status: **investigation. Both stages of the level checks passed on 2026-11-10:
+every line is 3.3 to 3.4 V, the radio streams when its heartbeat is answered, and
+the lines look the same with the erased ESP32 connected. No firmware yet.** See [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
 The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
@@ -216,8 +216,9 @@ in [docs/bench-notes.md](docs/bench-notes.md) either way.
    the ESP32 last. That way, the radio never drives a line into an ESP32 that has
    no power. An unpowered ESP32 would be fed through its protection diodes.
 5. Repeat the checks from stage 1, step 5, with the probes at the ESP32 terminals.
-   The levels should be the same as before, and the edges a little softer. The
-   data should still start after two or three seconds.
+   The levels should be the same as before. On mine they were, and the clock
+   edges too: the ESP32's few pF behind 470 ohms adds only about 2 ns, which
+   doesn't show. See [Stage 2, ESP32 in](#stage-2-esp32-in-the-radio-still-streams).
 6. When firmware takes over the heartbeat reply on GPIO39, take the link off
    first, with the DC lead out. Otherwise the radio's pin 12 and the ESP32 would
    both drive the same line. The 940 ohms keep that below 4 mA, but it's still a
@@ -348,6 +349,11 @@ UART port, the board repeats a line like `invalid header: 0xffffffff`. That's
 normal for an erased board. It means there's no program to run, which is what you
 want.
 
+**If the board is powered from its other socket, marked USB,** Windows keeps
+connecting and dropping it, about every 3 seconds, as port 303A:1001. That's
+normal for an erased board too: each time the chip retries, its own USB restarts.
+Use the COM socket, where the CH343 chip keeps the port steady.
+
 ## Oscilloscope traces
 
 Every trace from the bench goes here, so anyone checking the work can see what each
@@ -449,9 +455,51 @@ gone, so the radio sends no frames. The heartbeat reply is what turns the data o
 
 ![ACC pin 3 at 10 ms/div with the link off: high, no ripple.](docs/images/scope/acc-pin3-data1_link-off_10ms_2026-11-10_1223.png)
 
+### Stage 2, ESP32 in: the radio still streams
+
+The erased ESP32 in the board, powered from the PC through its COM socket, on all
+six lines. Link on. Each probe on the ESP32's terminal for that line, the same
+point as in stage 1, so the two can be compared directly. Every line looks the
+same as in stage 1.
+
+**ACC pin 12 (terminal 38), CNT TX.** The heartbeat, `alive ` at 8.49 us a bit,
+0 to 3.28 V, exactly once a second: 15 bursts in a row, 0.9996 to 1.0002 s apart.
+Terminal 39 is joined to 38 by the link, so it isn't shown again. (The scope's
+frequency readout says 20 Hz here, and 26.5 Hz and 32.7 kHz on the stage 1
+shots. It can't measure a signal that comes in short bursts, so ignore it.)
+
+![ACC pin 12 at 100 us/div, ESP32 in: the alive burst.](docs/images/scope/acc-pin12-cnt-tx_esp32-in-burst_100us_2026-11-10_1627.png)
+
+![ACC pin 12 at 1 s/div, ESP32 in: a burst once a second.](docs/images/scope/acc-pin12-cnt-tx_esp32-in-heartbeat_1s_2026-11-10_1626.png)
+
+**ACC pin 6 (terminal 13), CS.** 25.00 Hz, low 36.54 ms, period 40.00 ms, high
+3.32 V.
+
+![ACC pin 6 at 10 ms/div, ESP32 in: one low per frame, 25 a second.](docs/images/scope/acc-pin6-cs_esp32-in-frames_10ms_2026-11-10_1630.png)
+
+**ACC pin 5 (terminal 10), CLOCK.** 1.96 MHz in bursts of 8, one about every
+9 us. The edges are the same as in stage 1: 43 to 45 ns from 10% to 90%, against
+45 to 46 ns, and overshoot to 3.68 V and -0.40 V, against 3.64 V and -0.40 V.
+
+![ACC pin 5 at 200 ns/div, ESP32 in: the clock edges, the same as without it.](docs/images/scope/acc-pin5-clk_esp32-clock_200ns_2026-11-10_1631.png)
+
+![ACC pin 5 at 10 us/div, ESP32 in: bursts of 8 clocks.](docs/images/scope/acc-pin5-clk_esp32-clock-bursts_10us_2026-11-10_1631.png)
+
+**ACC pin 4 (terminal 11), DATA2.** About 28 ms of data in each 40 ms frame, then
+low, 0 to 3.32 V.
+
+![ACC pin 4 at 10 ms/div, ESP32 in: data, then quiet, in each frame.](docs/images/scope/acc-pin4-data2_esp32-frames_10ms_2026-11-10_1633.png)
+
+![ACC pin 4 at 10 us/div, ESP32 in: data bytes.](docs/images/scope/acc-pin4-data2_esp32-data_10us_2026-11-10_1633.png)
+
+**ACC pin 3 (terminal 14), DATA1.** Still no data. High, mean 3.31 V, with
+0.8 V of frame-shaped ripple peaking at 3.84 V (long ground lead).
+
+![ACC pin 3 at 10 ms/div, ESP32 in: high, with frame-shaped ripple.](docs/images/scope/acc-pin3-data1_esp32-in-long-lead_10ms_2026-11-10_1635.png)
+
 ### Still to take
 
-These need two probes at once, or the ESP32 in the board.
+These need two or three probes at once.
 
 | Trace | Probes: ACC pin (terminal) | Timebase | Command, after `python tools/scope_shot.py` |
 |---|---|---|---|
@@ -460,7 +508,6 @@ These need two probes at once, or the ESP32 in the board.
 | The start of one frame | C1: 6 (13), C2: 5 (10) | 2 us/div | `--acc C1=6 C2=5 --note link-frame-start` |
 | The first bytes of a frame | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note link-first-bytes --samples C1 C2 C3` |
 | Stage 2: the first bytes at the ESP32 | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note esp32-first-bytes --samples C1 C2 C3` |
-| Stage 2: the clock edges into the ESP32 | C1: 5 (10) | 200 ns/div | `--acc C1=5 --note esp32-clock --samples C1` |
 
 ## Comparing with my RSP1 and RSP1B
 
