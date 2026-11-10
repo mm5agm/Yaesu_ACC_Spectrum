@@ -304,6 +304,41 @@ Rules for my own firmware:
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
    frequency and span come from CAT, as they do for the FT-710. Then the
    FTdx101 additions: Main and Sub waterfalls, each placed on its own VFO.
+7. **Compare with the RSP1 and RSP1B.** Once YWC draws a spectrum from the ACC
+   data, compare it with the two SDRs on the 9 MHz IF outputs: the RSP1B on VFO
+   A and the RSP1 on VFO B. Receive only: off-air signals, or a signal
+   generator through an attenuator into the antenna socket at S9 or below.
+   Nothing keys the radio.
+   - **Setup.** Same centre and span on all three, Main on VFO A and Sub on VFO
+     B, so the ACC Main waterfall lines up with the RSP1B and the ACC Sub
+     waterfall with the RSP1. Note the radio's scope settings (span, level,
+     speed), because the ACC data is the radio's display data after its own
+     scaling.
+   - **Pictures.** Screenshots of the same moment from each source, saved
+     side by side in `docs/images/compare/`: a quiet band, a busy band (40 m
+     in the evening, or a contest weekend), a single steady carrier, and a
+     strong signal next to a weak one.
+   - **Frequency accuracy.** Where a steady carrier sits on each, against the
+     dial frequency. The RSP1 has a plain crystal, about 5 ppm, so up to about
+     45 Hz out at 9 MHz before YWC's correction. The RSP1B's reference is
+     better, and the ACC data comes from the radio's own reference.
+   - **Resolution.** Points across the span (850 per waterfall line in the
+     ACC frame) and the bin width that gives at each span, against the RSPs'
+     FFT size in YWC. Can two close carriers be told apart?
+   - **Noise floor and dynamic range.** The ACC data is one byte a point, so
+     at most 256 levels, and its dB scale is unknown. Step the radio's
+     attenuator (0, 6, 12, 18 dB) on a steady carrier to find the dB per
+     count. Then compare the gap between the noise floor and the strongest
+     signal with the RSPs'.
+   - **Update rate and latency.** Frames a second from each (25 from the ACC).
+     For latency, retune the VFO and compare how soon each display follows,
+     from the frame timestamps.
+   - **Span.** The widest and narrowest span each one can show.
+   - **What each needs.** The ACC route needs only the ESP32 on the ACC
+     socket; the SDRs need the IF outputs, the receivers and SDRplay's driver.
+
+   Write the results in a table in the README, one row per measurement, with a
+   column each for the ACC, the RSP1B and the RSP1.
 
 ## Open questions
 

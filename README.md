@@ -277,6 +277,68 @@ UART port, the board repeats a line like `invalid header: 0xffffffff`. That's
 normal for an erased board. It means there's no program to run, which is what you
 want.
 
+## Oscilloscope traces
+
+Every trace from the bench goes here, so anyone checking the work can see what each
+ACC line does on an FTdx101MP. They're taken on my Siglent SDS1104X-E with the
+probe at 10X, DC coupling, and the ground clip on pin 2, and read off the scope
+over its LAN port with [tools/scope_shot.py](tools/scope_shot.py). Cursors are
+off. Each picture is saved under its own name in
+[docs/images/scope/](docs/images/scope/), and the measured numbers go in the
+Levels table in [docs/bench-notes.md](docs/bench-notes.md).
+
+A trace that hasn't been taken yet is marked "to do". Its picture goes in when it's
+taken, with a line saying what it shows.
+
+### Stage 1, no link: what the radio sends on its own
+
+Nothing connected to the ESP32, and no 11-12 link.
+
+| Trace | Picture | Timebase | Status |
+|---|---|---|---|
+| Pin 12, the heartbeat once a second | `pin12-once-a-second.png` | 200 ms/div | To do |
+| Pin 12, one whole `alive` burst | `pin12-burst.png` | 100 us/div | To do |
+| Pin 12, the first byte, `a` (0x61), bit by bit | `pin12-first-byte.png` | 10 us/div | To do |
+| Pin 11, idle | `pin11-idle.png` | 200 ms/div | To do |
+| Pins 5, 6, 4 and 3, idle | `spi-idle.png` | 200 ms/div | To do |
+
+### Stage 1, link on: the radio streams
+
+The pin 11 to pin 12 link in place, still nothing connected to the ESP32.
+
+| Trace | Picture | Timebase | Status |
+|---|---|---|---|
+| Pins 12 and 11 together, the same burst on both | `link-pin12-pin11.png` | 100 us/div | To do |
+| Pin 12 and pin 6 (CS) from power-on, the data starting | `link-start.png` | 500 ms/div | To do |
+| Pin 6 (CS), low 25 times a second | `link-cs-25hz.png` | 10 ms/div | To do |
+| Pins 6 (CS) and 5 (CLK), the start of one frame | `link-cs-clk.png` | 2 us/div | To do |
+| Pin 5 (CLK), the 2 MHz clock | `link-clk-2mhz.png` | 200 ns/div | To do |
+| Pins 6, 5 and 4 (CS, CLK, DATA2), the first bytes of a frame | `link-cs-clk-data2.png` | 2 us/div | To do |
+| Pins 6 and 3 (CS, DATA1), Sub receiver off | `link-pin3-sub-off.png` | 2 us/div | To do |
+| Pins 6 and 3 (CS, DATA1), Sub receiver on | `link-pin3-sub-on.png` | 2 us/div | To do |
+| Link off: pin 12 carries on, pin 6 stops | `link-off-stop.png` | 1 s/div | To do |
+
+### Stage 2: at the ESP32's terminals
+
+The ESP32 erased and powered, the link still on, probes on the GPIO terminals.
+
+| Trace | Picture | Timebase | Status |
+|---|---|---|---|
+| Pins 6, 5 and 4 at GPIO13, 10 and 11, to compare with `link-cs-clk-data2.png` | `esp32-cs-clk-data2.png` | 2 us/div | To do |
+| Pin 5 at GPIO10, the clock edges through 470 ohms into the ESP32 | `esp32-clk-2mhz.png` | 200 ns/div | To do |
+
+## Comparing with my RSP1 and RSP1B
+
+My FTdx101MP already feeds two SDRplay receivers from its 9 MHz IF outputs: the
+RSP1B on VFO A's and the original RSP1 on VFO B's. YWC shows both. Once the ACC
+data gives a spectrum, I'll put it side by side with them: the same signals, at the
+same moment, with the same centre and span. That shows what the ACC route gives
+and what it loses compared with an SDR on the IF, for anyone choosing between
+them. It's receive-only, like everything else here.
+
+The method and the results table are in step 7 of [docs/plan.md](docs/plan.md).
+The pictures go in [docs/images/compare/](docs/images/compare/).
+
 ## Credits and background
 
 This project builds on other people's work on the FTDX10 and FT-710. ratmandu
