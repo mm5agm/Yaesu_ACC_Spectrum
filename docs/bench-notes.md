@@ -60,14 +60,15 @@ is off and a meter on the far end.
 
 ## Levels
 
-Scope ground on pin 2, nothing connected to the ESP32.
+Pins are ACC socket pins; the breakout terminal for each is in the README's
+Wiring table. Scope ground on ACC pin 2, nothing connected to the ESP32.
 
 Siglent SDS1104X-E, probe at 10X, 1 V/div, DC coupling, long ground lead. Each
 line measured at the free end of its 470 ohm resistor on the expansion board,
 with the ESP32 module out of the board and no 11-12 link. Screenshots and
 measurements read over the scope's LAN port (SCPI).
 
-| Pin | Signal | High level | Notes |
+| ACC pin | Signal | High level | Notes |
 |---|---|---|---|
 | 12 | CNT TX, heartbeat | 3.36 to 3.40 V | 2026-11-09. Low 0.00 V. Spikes to 3.52 V and dips to -0.12 V, mostly pickup on the long ground lead. Burst once a second, decoded as `61 6C 69 76 65 00` (`alive\0`), all stop bits good. Bit time 8.50 us, so about 117,660 baud, 2.1% faster than 115200; well inside UART tolerance. Burst 501 us long. |
 | 11 | CNT RX, input to the radio | 3.38 V, steady | 2026-11-09. No activity, as expected for an input. 3.24 to 3.52 V, 0.28 V peak to peak. A first attempt with the ground clip off read 2.2 to 4.7 V of noise; ignore that. |
