@@ -3,11 +3,21 @@
 Talks to the scope over its LAN port (SCPI on TCP port 5025). It never opens a
 serial port.
 
-    python tools/scope_shot.py pin12-burst
-    python tools/scope_shot.py link-cs-clk --samples C1 C2
+Say which ACC pin each channel's probe is on, and the script names the picture
+from that, the timebase and the time it was taken:
+
+    python tools/scope_shot.py --pins C1=12
+        -> pin12-cnt-tx_100us_2026-11-10_1432.png
+    python tools/scope_shot.py --pins C1=6 C2=5 --note link --samples C1 C2
+        -> link_pin6-cs_pin5-clk_2us_2026-11-10_1435.png
+
+Only channels switched on at the scope go in the name. A channel without a pin
+is named by its channel, such as c3. Give --name to use a name from the README's
+trace list instead, such as --name pin12-burst.
 
 The screenshot goes to docs/images/scope/<name>.png and the samples, if asked
 for, to captures/scope/<name>-C1.csv and so on, as time in seconds and volts.
+An existing picture is never overwritten: a -2, -3 and so on is added.
 Cursors are switched off first so they don't cover the trace.
 """
 
@@ -21,6 +31,14 @@ from pathlib import Path
 from PIL import Image
 
 REPO = Path(__file__).resolve().parent.parent
+SIGNALS = {
+    "3": "pin3-data1",
+    "4": "pin4-data2",
+    "5": "pin5-clk",
+    "6": "pin6-cs",
+    "11": "pin11-cnt-rx",
+    "12": "pin12-cnt-tx",
+}
 PREFIX = {"G": 1e9, "M": 1e6, "k": 1e3, "": 1.0, "m": 1e-3, "u": 1e-6, "n": 1e-9}
 
 
@@ -55,6 +73,9 @@ class Scope:
             raise ValueError(f"can't read a number from {reply!r}")
         return float(match.group(1)) * PREFIX[match.group(2)]
 
+    def channel_on(self, channel):
+        return self.query(f"{channel}:TRA?").upper().endswith("ON")
+
     def screenshot(self):
         self.send("SCDP")
         header = self.read_exact(14)
@@ -80,9 +101,56 @@ class Scope:
         return [i * step / sara for i in range(len(volts))], volts
 
 
+def timebase_label(seconds):
+    """1e-4 -> '100us', 0.002 -> '2ms', 2e-7 -> '200ns', 1.0 -> '1s'."""
+    for unit, scale in (("s", 1.0), ("ms", 1e-3), ("us", 1e-6), ("ns", 1e-9)):
+        if seconds >= scale * 0.999:
+            return f"{seconds / scale:.3g}{unit}"
+    return f"{seconds * 1e12:.3g}ps"
+
+
+def parse_pins(items):
+    pins = {}
+    for item in items:
+        match = re.fullmatch(r"([Cc][1-4])=(\d+)", item)
+        if not match:
+            sys.exit(f"{item!r}: write it as C1=12")
+        pin = match.group(2)
+        if pin not in SIGNALS:
+            sys.exit(f"pin {pin} isn't one of the probed ACC pins "
+                     f"({', '.join(sorted(SIGNALS, key=int))})")
+        pins[match.group(1).upper()] = SIGNALS[pin]
+    return pins
+
+
+def auto_name(scope, pins, note):
+    from datetime import datetime
+    parts = [note] if note else []
+    for channel in ("C1", "C2", "C3", "C4"):
+        if scope.channel_on(channel):
+            parts.append(pins.get(channel, channel.lower()))
+    if len(parts) == (1 if note else 0):
+        sys.exit("no channel is switched on at the scope")
+    parts.append(timebase_label(scope.number("TDIV?")))
+    parts.append(datetime.now().strftime("%Y-%m-%d_%H%M"))
+    return "_".join(parts)
+
+
+def unused(name):
+    folder = REPO / "docs" / "images" / "scope"
+    candidate, n = name, 1
+    while (folder / f"{candidate}.png").exists():
+        n += 1
+        candidate = f"{name}-{n}"
+    return candidate
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("name", help="file name without extension, e.g. pin12-burst")
+    parser.add_argument("--pins", nargs="*", default=[], metavar="CH=PIN",
+                        help="the ACC pin on each channel, e.g. C1=6 C2=5")
+    parser.add_argument("--note", help="a word for the start of the name, e.g. link")
+    parser.add_argument("--name", help="use this name instead, e.g. pin12-burst")
     parser.add_argument("--host", default="192.168.68.71")
     parser.add_argument("--samples", nargs="*", default=[], metavar="CH",
                         help="channels to save as CSV, e.g. C1 C2")
@@ -90,11 +158,14 @@ def main():
                         help="keep every Nth sample (default every one)")
     args = parser.parse_args()
 
-    if not re.fullmatch(r"[a-z0-9-]+", args.name):
-        sys.exit("use lower case letters, digits and hyphens in the name")
+    pins = parse_pins(args.pins)
+    for given in (args.name, args.note):
+        if given is not None and not re.fullmatch(r"[a-z0-9-]+", given):
+            sys.exit("use lower case letters, digits and hyphens in --name and --note")
 
     scope = Scope(args.host)
     scope.send("CRMS OFF")
+    args.name = unused(args.name or auto_name(scope, pins, args.note))
 
     png = REPO / "docs" / "images" / "scope" / f"{args.name}.png"
     png.parent.mkdir(parents=True, exist_ok=True)
