@@ -43,6 +43,7 @@ SIGNALS = {
     "11": ("acc-pin11-cnt-rx", "39"),
     "12": ("acc-pin12-cnt-tx", "38"),
 }
+MAX_SAMPLES = 200_000
 PREFIX = {"G": 1e9, "M": 1e6, "k": 1e3, "": 1.0, "m": 1e-3, "u": 1e-6, "n": 1e-9}
 
 
@@ -64,10 +65,13 @@ class Scope:
 
     def query(self, command):
         self.send(command)
-        line = bytearray()
-        while not line.endswith(b"\n"):
-            line += self.read_exact(1)
-        return line.decode("ascii", "replace").strip()
+        while True:  # skip blank lines, such as the line feed after a screenshot
+            line = bytearray()
+            while not line.endswith(b"\n"):
+                line += self.read_exact(1)
+            text = line.decode("ascii", "replace").strip()
+            if text:
+                return text
 
     def number(self, command):
         """Read a value like 'C1:VDIV 1.00E+00V' or 'SARA 1.00GSa/s'."""
@@ -92,7 +96,7 @@ class Scope:
         vdiv = self.number(f"{channel}:VDIV?")
         ofst = self.number(f"{channel}:OFST?")
         sara = self.number("SARA?")
-        self.send(f"WFSU SP,{step},NP,0,FP,0")
+        self.send("WFSU SP,0,NP,0,FP,0")  # every point; this scope ignores SP
         self.send(f"{channel}:WF? DAT2")
         head = bytearray()
         while not head.endswith(b"#9"):
@@ -100,9 +104,11 @@ class Scope:
         length = int(self.read_exact(9))
         raw = self.read_exact(length)
         self.read_exact(2)  # the two line feeds after the block
-        codes = [b - 256 if b > 127 else b for b in raw]
-        volts = [code / 25.0 * vdiv - ofst for code in codes]
-        return [i * step / sara for i in range(len(volts))], volts
+        if not step:
+            step = max(1, -(-len(raw) // MAX_SAMPLES))
+        raw = raw[::step]
+        volts = [(b - 256 if b > 127 else b) / 25.0 * vdiv - ofst for b in raw]
+        return [i * step / sara for i in range(len(volts))], volts, step
 
 
 def timebase_label(seconds):
@@ -166,11 +172,13 @@ def main():
                         help="the ACC socket pin (not the terminal) on each channel, "
                              "e.g. C1=6 C2=5")
     parser.add_argument("--note", help="what the shot shows, e.g. burst or link-frame-start")
-    parser.add_argument("--host", default="192.168.68.71")
+    parser.add_argument("--host", default="192.168.68.68",
+                        help="the scope's address, from Utility > I/O > LAN on the scope")
     parser.add_argument("--samples", nargs="*", default=[], metavar="CH",
                         help="channels to save as CSV, e.g. C1 C2")
-    parser.add_argument("--step", type=int, default=1,
-                        help="keep every Nth sample (default every one)")
+    parser.add_argument("--step", type=int, default=0,
+                        help="keep every Nth sample; 1 keeps all of them. By default it "
+                             f"keeps enough to make at most {MAX_SAMPLES:,}")
     args = parser.parse_args()
 
     pins = parse_pins(args.acc)
@@ -190,14 +198,14 @@ def main():
         channel = channel.upper()
         if not re.fullmatch(r"C[1-4]", channel):
             sys.exit(f"{channel} isn't a channel (C1 to C4)")
-        times, volts = scope.samples(channel, args.step)
+        times, volts, step = scope.samples(channel, args.step)
         csv = REPO / "captures" / "scope" / f"{args.name}-{channel}.csv"
         csv.parent.mkdir(parents=True, exist_ok=True)
         with csv.open("w", encoding="ascii") as f:
             f.write("seconds,volts\n")
             for t, v in zip(times, volts):
                 f.write(f"{t:.9g},{v:.4f}\n")
-        print(f"saved {csv.relative_to(REPO)}, {len(volts)} samples, "
+        print(f"saved {csv.relative_to(REPO)}, {len(volts):,} samples (every {step}), "
               f"{min(volts):.2f} to {max(volts):.2f} V")
 
 
