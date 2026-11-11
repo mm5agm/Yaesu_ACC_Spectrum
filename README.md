@@ -1,5 +1,7 @@
 # Yaesu ACC spectrum
 
+☕ [Buy me a coffee](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=mm5agm.software%40outlook.com&item_name=Yaesu+ACC+Spectrum&currency_code=GBP) if this is useful to you.
+
 Can Yaesu Web Control (YWC) get a Yaesu's own scope data from the ACC socket,
 through an ESP32-S3 over USB?
 
@@ -8,9 +10,12 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
-Status: **investigation. Both stages of the level checks passed on 2026-11-10:
-every line is 3.3 to 3.4 V, the radio streams when its heartbeat is answered, and
-the lines look the same with the erased ESP32 connected. No firmware yet.** See [Oscilloscope traces](#oscilloscope-traces).
+Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
+frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
+VFOs, the span, the placement and the audio scope are all worked out (step 5 of
+the plan), and `tools/live_view.py` draws them. Next is a library other programs
+can use, and then YWC: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
+The level checks are in [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
 The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
