@@ -420,7 +420,7 @@ Rules for my own firmware:
    | 1700 | `01`, fixed |
    | 1701-1899 | Main's AF-FFT: 199 points, 0 to about 3.8 kHz, 19-20 Hz a point (the 1 kHz tone at point 49, 2 kHz at 101). Inverted like the scope: lower is stronger |
    | 1900-2299 | Main's oscilloscope: 200 columns, each a max byte then a min byte, centred on 128. At sweep time t0, 50 us a column, 10 ms across |
-   | 2300-2899 | Sub's, the same way round, probably (2300-2301 fixed, 2302-2499 AF-FFT, 2500-2899 oscilloscope). Not tested on its own yet |
+   | 2300-2899 | Sub's, the same way round, probably: AF-FFT 2300-2499, oscilloscope 2500-2899. Bytes 2300-2301 aren't fixed: they move with the AF-FFT attenuator, so they belong to the AF-FFT. Not tested on its own yet |
    | 3056 | Main's AF-FFT/oscilloscope settings: bits 0-2 osc time (t0-t5), bits 3-4 osc attenuator (a0-a2), bits 5-6 FFT attenuator (0-2) |
 
    The oscilloscope attenuator changed the max-to-min gap from 238 to 104 to

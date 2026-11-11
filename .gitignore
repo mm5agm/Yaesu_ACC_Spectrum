@@ -11,3 +11,5 @@ __pycache__/
 captures/latest.bin
 captures/latest.tmp
 firmware/release/
+library/**/bin/
+library/**/obj/

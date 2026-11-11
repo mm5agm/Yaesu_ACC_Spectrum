@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- .NET Standard 2.0, so it works in .NET 8 and later programs and in older
+       .NET Framework ones, which many logging programs still are. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>YaesuAccScope</RootNamespace>
+    <Version>0.1.0</Version>
+    <PackageId>YaesuAccScope</PackageId>
+    <Authors>Colin Campbell MM5AGM</Authors>
+    <Description>Reads a Yaesu FTdx101's own scope data from its ACC socket, through an ESP32-S3 running the Yaesu_ACC_Spectrum firmware.</Description>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mm5agm/Yaesu_ACC_Spectrum</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mm5agm/Yaesu_ACC_Spectrum</RepositoryUrl>
+    <PackageTags>yaesu;ftdx101;spectrum;scope;ham-radio;esp32</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\COPYING.LESSER" Pack="true" PackagePath="\" />
+    <None Include="..\..\COPYING" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
