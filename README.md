@@ -46,6 +46,9 @@ in perspective:
   is easy to plug in and unplug. Its wires go to the breakout board's terminals.
 - **An ESP32-S3 DevKitC-1 N16R8** (marked HW678) on a screw-terminal breakout
   board. Mine is [this one from Amazon UK](https://www.amazon.co.uk/dp/B0F8N8LZ4G) (B0F8N8LZ4G).
+  I chose an ESP32 because I couldn't find a UK supplier of an FTDI FT4222
+  USB-to-SPI board, the chip the FT-710 uses inside for its scope. The ESP32-S3
+  is cheap and easy to get, and its native USB is fast enough for the data.
 - **Six 470 ohm resistors**, one in series with each signal wire. See
   [Resistor value and the 2 MHz clock](#resistor-value-and-the-2-mhz-clock).
 - **Two USB data leads** to the PC: one for the socket marked COM (flashing and
