@@ -10,6 +10,10 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
+> **Work in progress.** There's no setup guide or firmware release yet. If you
+> wire your own radio, follow [docs/bench-notes.md](docs/bench-notes.md) and
+> [docs/fuse-risk.md](docs/fuse-risk.md), and do it at your own risk.
+
 Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
 frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
 VFOs, the span, the placement and the audio scope are all worked out (step 5 of
