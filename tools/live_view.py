@@ -110,6 +110,7 @@ class Viewer:
         self.paused = False
         self.lut = {}           # per receiver: Main and Sub sit at different levels
         self.range = {}
+        self.trace_lo = {}      # the trace keeps the noise in view, so it starts lower
         self.count, self.rate_start = 0, time.monotonic()
         self.pal = palette()
         self.canvas = {}
@@ -141,11 +142,15 @@ class Viewer:
         root.after(40, self.tick)
 
     def make_lut(self, name, values):
-        """Stretch the colours from the noise floor to the strongest signal on screen."""
+        """Stretch the colours from the noise floor to the strongest signal on screen.
+
+        Black is the median, about the noise floor, so the noise stays dark and
+        weak signals such as FT8 show up against it."""
         ordered = sorted(values)
-        lo = ordered[len(ordered) // 10]
+        lo = ordered[len(ordered) // 2]
         hi = max(ordered[-1], lo + 20)
         self.range[name] = (lo, hi)
+        self.trace_lo[name] = ordered[len(ordered) // 20]
         self.lut[name] = bytes(0 if v <= lo else 255 if v >= hi else round((v - lo) * 255 / (hi - lo))
                                for v in range(256))
 
@@ -183,7 +188,8 @@ class Viewer:
 
     def draw_traces(self, frame):
         for name, start in RECEIVERS:
-            lo, hi = self.range.get(name, (0, 255))
+            _, hi = self.range.get(name, (0, 255))
+            lo = self.trace_lo.get(name, 0)
             span = max(hi - lo, 1)
             pts = []
             for i in range(POINTS):
