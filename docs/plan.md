@@ -339,8 +339,10 @@ Rules for my own firmware:
    - No `FF 01 EE 01` trailer anywhere in the frame.
    - Bytes 0-1699 change from frame to frame and run smoothly, about 0x98 to
      0xE9: the two waterfalls step 5 expects, 850 bytes each.
-   - Bytes 1700-1701 are always `01 43`.
-   - Bytes 1702-2899 change from frame to frame. Not decoded yet.
+   - Bytes 1700-1701 were `01 43` in every frame of that capture. Later
+     captures showed byte 1701 changing from frame to frame, so only byte 1700
+     is fixed; 1701 belongs with the block after it.
+   - Bytes 1701-2899 change from frame to frame. Not decoded yet.
    - Bytes 2900-3101 are the same in every frame: probably the settings block.
    - Bytes 3102-4095 are zeros, which matches the scope's 8.7 ms of low DATA2
      at the end of each frame.
@@ -358,9 +360,79 @@ Rules for my own firmware:
    waterfall. Map the settings block (about 144 bytes at the end) by
    changing one control at a time on the radio and diffing captures.
    Work out what pin 3 carries.
+
+   **Started on 2026-11-11.** I changed one control at a time from YWC's Radio
+   Scope card and its settings, and compared the fixed block before and after.
+   `live_view.py --dump captures/latest.bin` keeps the last second of frames
+   in a file, so captures don't need the viewer closed. The captures are in
+   `captures/step5/`, named after what was set. Found so far:
+
+   | Bytes | What | How it's written |
+   |---|---|---|
+   | 3068-3071 | VFO A, the Main scope's centre | Hz, 4 bytes big-endian |
+   | 3094-3097 | VFO B, the Sub scope's centre | Hz, 4 bytes big-endian |
+   | 2961-2964 | VFO A again | BCD, 10 Hz steps: `14 07 50 00` is 14.0750.00 |
+   | 3009-3012 | VFO B again | BCD: `07 47 40 00` is 7.4740.00 |
+   | 3036-3039, 3064-3067 | VFO A + 1500 Hz + IF shift: where the radio draws Main's passband | Hz, big-endian |
+   | 3040-3043, 3086-3089 | the same for VFO B | Hz, big-endian |
+   | 3062 | Main span and placement | low 4 bits the span: 0 = 1k, 1 = 2k, 2 = 5k, 3 = 10k, 4 = 20k, 5 = 50k, 6 = 100k, 7 = 200k, 8 = 500k, 9 = 1M. Top 2 bits the placement: 1 Center, 0 Cursor, 2 Fix |
+   | 3084 | Sub span and placement | the same |
+   | 3076-3079 | Main's left edge in Cursor and Fix | Hz, big-endian. Not kept up to date in Center |
+   | 3098-3101 | Sub's left edge in Cursor and Fix | the same |
+   | 2917 | Main's scope mode, the SS P3 character: 0-2 = 3DSS, 3 = W/F Center L, 6 = Cursor, 9 = Fix | |
+   | 2918 | Sub's scope mode, the same | |
+   | 2926-2927 | follows Main's span: about 4,740,000 / span, capped at 395 (1k-10k 395, 20k 237, 50k 94, 100k 47, 200k 23, 500k 9, 1M 4) | unknown |
+   | 2930-2931 | the same for Sub | unknown |
+   | 2916 | 0 or 1: the Band button in the Radio Scope card, MAIN or SUB | |
+
+   In Center the scope is centred on the VFO: with VFO A tuned onto a steady
+   carrier (14.097.07, USB), the carrier sat on point 425 of 850. In Cursor and
+   Fix the left-edge field gives the window. Fix at 14.000 with 200k gave the
+   same trace as Center with VFO A on 14.100, to the point. The radio keeps a
+   separate span for Fix: Main's was 10k while Center was on 20k.
+
+   **The 850 points cover more than the span.** At each span from 1k to 1M I
+   tuned VFO A a quarter of the span and measured how far the whole trace
+   moved. Every time it was 197-199 points, so the span is the middle 791
+   points (788 to 795), with about 30 points beyond each edge:
+
+   | Span | 1k | 2k | 5k | 10k | 20k | 50k | 100k | 200k | 500k | 1M |
+   |---|---|---|---|---|---|---|---|---|---|---|
+   | Points in the span | 792 | 790 | 791 | 795 | 788 | 792 | 790 | 789 | 791 | 791 |
+
+   `live_view.py` draws the scale that way, for all three placements.
+
+   The VFO + 1500 Hz fields stay at + 1500 in USB, LSB, CW-U and AM, and with
+   the IF width changed, but an IF shift of +500 Hz moved them to + 2000. So
+   they're the passband marker the radio draws on its scope.
+
+   3DSS changes nothing but byte 2917: the spectrum bytes have the same layout
+   and levels, and the span byte stays the same. 3DSS is only how the radio
+   draws the picture.
+
+   **Bytes 1700-2899 are the audio scope**, the AF-FFT and oscilloscope the
+   radio can show for each receiver. Found by tuning the steady carrier into
+   the passband as a 1 kHz and then a 2 kHz tone, and by stepping the
+   AF-FFT/oscilloscope settings from YWC:
+
+   | Bytes | What |
+   |---|---|
+   | 1700 | `01`, fixed |
+   | 1701-1899 | Main's AF-FFT: 199 points, 0 to about 3.8 kHz, 19-20 Hz a point (the 1 kHz tone at point 49, 2 kHz at 101). Inverted like the scope: lower is stronger |
+   | 1900-2299 | Main's oscilloscope: 200 columns, each a max byte then a min byte, centred on 128. At sweep time t0, 50 us a column, 10 ms across |
+   | 2300-2899 | Sub's, the same way round, probably (2300-2301 fixed, 2302-2499 AF-FFT, 2500-2899 oscilloscope). Not tested on its own yet |
+   | 3056 | Main's AF-FFT/oscilloscope settings: bits 0-2 osc time (t0-t5), bits 3-4 osc attenuator (a0-a2), bits 5-6 FFT attenuator (0-2) |
+
+   The oscilloscope attenuator changed the max-to-min gap from 238 to 104 to
+   33 (a0, a1, a2), and the FFT attenuator raised the AF-FFT bytes from 53 to
+   73 to 94 (0, 1, 2). Pictures: `docs/images/audio-ft8-14074-usb.png` (FT8
+   tones over 16 s, with the end of the slot) and
+   `docs/images/audio-radio-scotland-810-am.png` (speech, and the waveform at
+   t0).
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
-   frequency and span come from CAT, as they do for the FT-710. Then the
+   frequency and span are in the frame itself (step 5), so YWC doesn't need
+   CAT for them, unlike the FT-710. Then the
    FTdx101 additions: Main and Sub waterfalls, each placed on its own VFO.
 7. **Compare with the RSP1 and RSP1B.** Once YWC draws a spectrum from the ACC
    data, compare it with the two SDRs on the 9 MHz IF outputs: the RSP1B on VFO
