@@ -31,6 +31,8 @@ Flashing follows the bench rules: the radio off and its DC lead out.
 
 ### 2. The library: `YaesuAccScope`
 
+**First version on 2026-11-11**, in [library/](../library/README.md): packets, frames, status texts, the serial reader and the board finder, with 48 tests on my captures. Tried on the board: it found COM6 from the status text and read version 2.0.1. Still to do: the network reader (with YWC's re-broadcast) and nuget.org.
+
 A .NET Standard 2.0 library, so it works in .NET 8 programs and in older .NET
 Framework ones, which many logging programs still are. In `library/`, with its
 own LGPL-3 licence files (the LGPL text and the GPL text it builds on).
@@ -56,6 +58,8 @@ Later, only if someone asks: a plain C DLL from the same code (NativeAOT), for
 C, C++, Delphi or Python, with no .NET needed.
 
 ### 3. The protocol, written down
+
+**Done on 2026-11-11:** [protocol.md](protocol.md).
 
 `docs/protocol.md`: the packet format and the full frame layout, so anyone can
 write a reader in any language without the library. Mostly the step 5 tables,

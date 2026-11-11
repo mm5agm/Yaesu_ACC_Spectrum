@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YaesuAccScope/YaesuAccScope.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YaesuAccScope.Tests/YaesuAccScope.Tests.csproj" />
+  </Folder>
+</Solution>

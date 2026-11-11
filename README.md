@@ -17,8 +17,10 @@ already sends its scope over USB, and YWC uses that.
 Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
 frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
 VFOs, the span, the placement and the audio scope are all worked out (step 5 of
-the plan), and `tools/live_view.py` draws them. Next is a library other programs
-can use, and then YWC: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
+the plan), and `tools/live_view.py` draws them. The first version of the
+library is in [library/](library/README.md), for other programs to use, and the
+frame layout is written down in [docs/protocol.md](docs/protocol.md). YWC is
+next: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
 The level checks are in [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
@@ -605,8 +607,8 @@ found.
 | `firmware/` | My own ESP32-S3 firmware |
 | `tools/` | Capture and analysis scripts |
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
-| `docs/` | The plan and the bench notes |
-| `library/` | Coming: a .NET library that reads the board's frames, for any program to use |
+| `docs/` | The plan, the bench notes and the protocol |
+| `library/` | YaesuAccScope, a .NET library that reads the board's frames, for any program to use. See [library/README.md](library/README.md) |
 
 It works, so the firmware, wiring and bench notes stay here, along with the
 library. YWC will use the library to show the ACC spectrum. See
@@ -635,7 +637,6 @@ library. YWC will use the library to show the ACC spectrum. See
 GPL-3.0, the same as the other repositories. See [LICENSE](LICENSE). Its sections 15
 and 16 also cover the lack of warranty and liability.
 
-A library is coming, so other programs can read the ACC data without copying
-code from here. It will go in `library/` with its own licence, LGPL-3.0, so a
-program can use it without having to be GPL itself. See
-[docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
+The library in `library/` has its own licence, LGPL-3.0, so other programs can
+read the ACC data without copying code from here, and without having to be GPL
+themselves. See [library/COPYING.LESSER](library/COPYING.LESSER).

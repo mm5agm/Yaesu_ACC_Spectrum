@@ -1,0 +1,25 @@
+name: Library
+
+on:
+  push:
+    branches: [main]
+    paths: ['library/**', 'captures/**', '.github/workflows/library.yml']
+  pull_request:
+    paths: ['library/**', 'captures/**', '.github/workflows/library.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test library/YaesuAccScope.slnx -c Release
+      - run: dotnet pack library/src/YaesuAccScope -c Release -o library/out
