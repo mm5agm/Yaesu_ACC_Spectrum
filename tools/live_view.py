@@ -142,7 +142,10 @@ def read_port(device, out, stop, dump=None):
                 last_dump = time.monotonic()
                 tmp = dump.with_suffix(".tmp")
                 tmp.write_bytes(b"".join(recent))
-                os.replace(tmp, dump)
+                try:
+                    os.replace(tmp, dump)
+                except PermissionError:
+                    pass        # someone is reading it this instant; next second
 
 
 def read_file(path, out, stop):

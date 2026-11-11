@@ -403,7 +403,27 @@ Rules for my own firmware:
    `live_view.py` draws the scale that way, for all three placements.
 
    The VFO + 1500 Hz fields stay at + 1500 in USB, LSB and CW-U, so they aren't
-   the mode's offset. Still to do: what they are, 3DSS, and bytes 1701-2899.
+   the mode's offset. Still to do: what they are, and 3DSS.
+
+   **Bytes 1700-2899 are the audio scope**, the AF-FFT and oscilloscope the
+   radio can show for each receiver. Found by tuning the steady carrier into
+   the passband as a 1 kHz and then a 2 kHz tone, and by stepping the
+   AF-FFT/oscilloscope settings from YWC:
+
+   | Bytes | What |
+   |---|---|
+   | 1700 | `01`, fixed |
+   | 1701-1899 | Main's AF-FFT: 199 points, 0 to about 3.8 kHz, 19-20 Hz a point (the 1 kHz tone at point 49, 2 kHz at 101). Inverted like the scope: lower is stronger |
+   | 1900-2299 | Main's oscilloscope: 200 columns, each a max byte then a min byte, centred on 128. At sweep time t0, 50 us a column, 10 ms across |
+   | 2300-2899 | Sub's, the same way round, probably (2300-2301 fixed, 2302-2499 AF-FFT, 2500-2899 oscilloscope). Not tested on its own yet |
+   | 3056 | Main's AF-FFT/oscilloscope settings: bits 0-2 osc time (t0-t5), bits 3-4 osc attenuator (a0-a2), bits 5-6 FFT attenuator (0-2) |
+
+   The oscilloscope attenuator changed the max-to-min gap from 238 to 104 to
+   33 (a0, a1, a2), and the FFT attenuator raised the AF-FFT bytes from 53 to
+   73 to 94 (0, 1, 2). Pictures: `docs/images/audio-ft8-14074-usb.png` (FT8
+   tones over 16 s, with the end of the slot) and
+   `docs/images/audio-radio-scotland-810-am.png` (speech, and the waveform at
+   t0).
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
    frequency and span are in the frame itself (step 5), so YWC doesn't need
