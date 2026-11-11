@@ -16,6 +16,11 @@ The full plan is in [docs/plan.md](docs/plan.md).
 The extension cable isn't cut. A ready-made 13-pin plug with wires, from the
 IC-7300MK2, goes into its female end, so the board is easy to plug in and unplug.
 
+**The wire colours in this repository are those of that ready-made lead, which
+came from Icom with the plug already soldered on. They aren't the colours you get
+by cutting the Amazon extension cable in two. If you cut that cable, meter every
+wire to find its pin, and don't go by the colours here.**
+
 ## Use at your own risk
 
 **Everything in this repository is used entirely at your own risk.** Connecting
@@ -44,7 +49,10 @@ in [docs/plan.md](docs/plan.md).
 **Pin numbers.** In this repository, "pin" always means a pin of the radio's ACC
 socket, numbered as in the radio's manual. The breakout board's screw terminals are
 marked with the ESP32's GPIO numbers, so they're called terminals, such as
-terminal 38. This table converts one to the other:
+terminal 38. This table converts one to the other.
+
+**The wire colours are those of my ready-made Icom lead, not the Amazon extension
+cable's wires if it's cut in two.**
 
 | ACC pin | Signal | Wire | Breakout terminal |
 |---|---|---|---|
@@ -125,7 +133,9 @@ colour. The downside is that the usual meanings don't apply:
 - **Black is SEND** (pin 10), not ground. It's not connected.
 - Blue and light blue are different signals, and so are green and light green.
 
-Other leads may use other colours, so check yours with a meter before wiring.
+**These are the colours of the ready-made Icom lead, not the Amazon extension
+cable's.** Other leads may use other colours, so check yours with a meter before
+wiring.
 
 ## Safe first connection
 
