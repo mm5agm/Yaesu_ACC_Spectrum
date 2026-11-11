@@ -11,3 +11,10 @@ python -m pip install -r tools/requirements.txt
 
 - `scope_shot.py`: saves a screenshot, and optionally the samples, from the
   Siglent scope over its LAN port. See [Oscilloscope traces](../README.md#oscilloscope-traces).
+
+- `check_frames.py`: reads the frames the firmware in `firmware/` sends over the
+  board's native USB (the socket marked USB, 303A:1001), and reports frames a
+  second, frame lengths and where the data ends in each frame (byte 3102, the same
+  in every frame, when the SPI mode is right). It saves the raw stream in
+  `captures/`. `--mode 2` or `--mode 3` switches the firmware's SPI mode first.
+  See step 4 of [docs/plan.md](../docs/plan.md).
