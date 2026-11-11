@@ -64,7 +64,7 @@ so the drawing works for both.
 ## The cable and the board
 
 **The cable isn't cut.** The first idea was to cut the extension cable (13-pin
-mini-DIN male to female, Amazon UK B0BRQDDTTZ, £18.99) and use its wires. A
+mini-DIN male to female, [Amazon UK B0BRQDDTTZ](https://www.amazon.co.uk/dp/B0BRQDDTTZ), £18.99) and use its wires. A
 ready-made 13-pin plug with wires attached was available instead, from the
 IC-7300MK2, so that plug goes into the cable's female end and its wires are the
 ones used. This makes it easier to plug the board into the circuit and unplug it.
@@ -112,8 +112,8 @@ ground. ESP32 GND and the scope ground go only to the red wire, which is worth m
 as GND with a label or a band of tape. Blue and light blue are different signals, and so
 are green and light green.
 
-**The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, marked HW678, Amazon UK
-B0F8N8LZ4G). Anything still wired to it from earlier work comes off first.
+**The board** is an ESP32-S3 DevKitC-1 N16R8 (WROOM-1-N16R8, marked HW678, [Amazon UK
+B0F8N8LZ4G](https://www.amazon.co.uk/dp/B0F8N8LZ4G)). Anything still wired to it from earlier work comes off first.
 
 - It normally has two USB sockets. Use the one marked USB, the S3's native USB, not
   the one marked UART, which is marked COM on mine.
