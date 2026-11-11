@@ -304,7 +304,8 @@ Rules for my own firmware:
    connected to the ESP32. Then stage 2, with the erased ESP32 connected. **Both
    passed on 2026-11-10;** see docs/bench-notes.md.
 3. **My own firmware, first version.** The dumb pipe described above, in
-   `firmware/`, built with PlatformIO (the toolchain YWC_IWC_PADDLE uses):
+   `firmware/`, built with PlatformIO (the toolchain YWC_IWC_PADDLE uses).
+   **Written and compiled on 2026-11-11, not yet flashed:**
    - SPI slave on GPIO10 (clock), GPIO11 (DATA2) and GPIO13 (CS), with DMA.
      GPIO14 (DATA1) is left as a plain input; it carries nothing so far.
    - Raw bytes out over the native USB (the socket marked USB), unchanged.
@@ -318,7 +319,8 @@ Rules for my own firmware:
    - Flash it through the COM socket with the radio's DC lead out, move the
      lead to the USB socket, then power up in the usual order: ESP32 first,
      then the radio.
-4. **Check the frames.** A script in `tools/` that reads the native USB port
+4. **Check the frames.** `tools/check_frames.py`, written on 2026-11-11 and not yet
+   run on the board. It reads the native USB port
    (found the same way as in `erase_esp32.py`, never COM3 or COM4) and
    reports frames a second, frame length, and whether each frame ends with
    the FT-710's `FF 01 EE 01` trailer. It should be 25 frames a second of
