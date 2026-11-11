@@ -286,9 +286,9 @@ What's left to check:
   search for them.
 - The extra content on the FTdx101: the Sub receiver's waterfall at bytes
   850–1699, and whatever differs in the settings block.
-- On the YWC side, the source is a USB serial port instead of the FT4222H.
-  That's a new input class in `Yaesu_Sdr_Worker` beside `Ft4222Bridge`, not
-  a new decoder.
+- ~~On the YWC side, a new input class in `Yaesu_Sdr_Worker`.~~ Changed: a
+  library in this repo reads the board, and YWC uses it in its own process,
+  not in the SDR worker. See [library-and-ywc-plan.md](library-and-ywc-plan.md).
 
 Rules for my own firmware:
 
