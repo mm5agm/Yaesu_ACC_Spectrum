@@ -402,8 +402,8 @@ Rules for my own firmware:
 
    `live_view.py` draws the scale that way, for all three placements.
 
-   Still to do: CW and the other modes (the VFO + 1500 Hz fields), 3DSS, and
-   bytes 1701-2899.
+   The VFO + 1500 Hz fields stay at + 1500 in USB, LSB and CW-U, so they aren't
+   the mode's offset. Still to do: what they are, 3DSS, and bytes 1701-2899.
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
    frequency and span are in the frame itself (step 5), so YWC doesn't need
