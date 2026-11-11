@@ -21,5 +21,9 @@ python -m pip install -r tools/requirements.txt
 
 - `live_view.py`: shows the scope live from the same port: a trace and a
   waterfall for Main (bytes 0-849) and Sub (bytes 850-1699), each byte inverted.
-  No frequency scale yet. `--file captures/...bin` plays a saved capture instead.
+  The frequency scale comes from each receiver's VFO and span in the frame
+  (step 5 of the plan); it assumes Placement is Center. `--file
+  captures/...bin` plays a saved capture instead. `--dump captures/latest.bin`
+  writes the last second of frames there every second, for decoding while the
+  viewer stays open.
   Space pauses, A sets the colours again, Esc quits.

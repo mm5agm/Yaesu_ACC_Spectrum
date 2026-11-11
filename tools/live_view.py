@@ -7,17 +7,24 @@ Never opens COM3 or COM4.
     python tools/live_view.py
     python tools/live_view.py --port COM6
     python tools/live_view.py --file captures/acc-20261111-113822-mode2.bin
+    python tools/live_view.py --dump captures/latest.bin   # for decoding, see below
 
 What it draws, from what I've found so far (docs/plan.md, step 4):
   bytes 0-849     Main, 850 points across the scope's span
   bytes 850-1699  Sub, the same
 Each byte is inverted: 0 is the strongest signal, so the viewer shows 255 minus
-the byte. No frequency scale yet: centre and span come from CAT later (step 6).
+the byte. The frequency scale comes from the frame too: each receiver's VFO and
+span (step 5). It assumes the scope is set to centre, the way I've tested it.
+
+--dump writes the last second's frames to a file every second, back to back, so
+captures can be compared while the viewer stays open (step 5 of docs/plan.md).
 
 Keys: Space pauses, A sets the colours again from what's on screen now, Esc quits.
 """
 
 import argparse
+import collections
+import os
 import pathlib
 import queue
 import sys
@@ -35,6 +42,31 @@ except ImportError:
 
 POINTS = 850
 RECEIVERS = (("Main", 0), ("Sub", POINTS))
+# Where each receiver's centre and span sit in the frame (docs/plan.md, step 5).
+# Centre: the VFO in Hz, 4 bytes big-endian. Span: the low 4 bits of one byte,
+# counting up the radio's span list.
+CENTRE_AT = {"Main": 3068, "Sub": 3094}
+SPAN_AT = {"Main": 3062, "Sub": 3084}
+SPANS = (1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000)
+# The 850 points cover a little more than the span: the span itself is the middle
+# 790 or so, with about 30 points either side. Measured by tuning a steady carrier
+# across the scope: 63.4 Hz a point at 50k, 25.2 at 20k (docs/plan.md, step 5).
+SPAN_POINTS = 790
+
+
+def tuning(frame, name):
+    """(centre Hz, span Hz) for a receiver, or None if the bytes don't make sense."""
+    if len(frame) < 3102:
+        return None
+    centre = int.from_bytes(frame[CENTRE_AT[name]:CENTRE_AT[name] + 4], "big")
+    index = frame[SPAN_AT[name]] & 0x0F
+    if not 30_000 <= centre <= 75_000_000 or index >= len(SPANS):
+        return None
+    return centre, SPANS[index]
+
+
+def khz(hz):
+    return f"{hz / 1000:,.3f}".rstrip("0").rstrip(".")
 WIDTH = 1700            # pixels across; each point is two pixels wide
 TRACE_H = 160
 FALL_H = 220
@@ -85,12 +117,23 @@ class Frames:
         return frames
 
 
-def read_port(device, out, stop):
+def read_port(device, out, stop, dump=None):
     splitter = Frames()
+    recent = collections.deque(maxlen=25)
+    last_dump = time.monotonic()
     with open_port(device) as s:
         while not stop.is_set():
             for f in splitter.feed(s.read(65536)):
                 out.put(f)
+                recent.append(f)
+            if dump and time.monotonic() - last_dump >= 1:
+                # The last second of frames, raw and back to back, for decoding
+                # while the viewer stays open. Replaced whole, so a reader never
+                # sees half a file.
+                last_dump = time.monotonic()
+                tmp = dump.with_suffix(".tmp")
+                tmp.write_bytes(b"".join(recent))
+                os.replace(tmp, dump)
 
 
 def read_file(path, out, stop):
@@ -117,15 +160,21 @@ class Viewer:
         self.falls = {}
         self.photos = {}
         self.items = {}
+        self.titles = {}
+        self.scale_items = {}
+        self.shown = {}         # the (centre, span) each scale is drawn for
         root.configure(bg="black")
         for name, _ in RECEIVERS:
-            tk.Label(root, text=name, fg="white", bg="black", anchor="w",
-                     font=("Segoe UI", 10, "bold")).pack(fill="x", padx=4)
+            self.titles[name] = tk.Label(root, text=name, fg="white", bg="black", anchor="w",
+                                         font=("Segoe UI", 10, "bold"))
+            self.titles[name].pack(fill="x", padx=4)
+            self.scale_items[name] = []
             c = tk.Canvas(root, width=WIDTH, height=TRACE_H + FALL_H, bg="black",
                           highlightthickness=0)
             c.pack(padx=4, pady=(0, 6))
-            for x in range(0, WIDTH + 1, WIDTH // 10):      # tenths of the span
-                c.create_line(x, 0, x, TRACE_H, fill="#222")
+            for k in range(-5, 6):                  # the radio's ten divisions
+                x = self.x_at(k * SPAN_POINTS / 10)
+                c.create_line(x, 0, x, TRACE_H, fill="#333" if k in (-5, 5) else "#222")
             for y in range(0, TRACE_H, TRACE_H // 4):
                 c.create_line(0, y, WIDTH, y, fill="#222")
             fall = Image.new("P", (POINTS, FALL_H))
@@ -140,6 +189,10 @@ class Viewer:
         root.bind("<a>", lambda e: self.lut.clear())
         root.bind("<Escape>", lambda e: root.destroy())
         root.after(40, self.tick)
+
+    @staticmethod
+    def x_at(points_from_centre):
+        return round((POINTS / 2 + points_from_centre) * WIDTH / POINTS)
 
     def make_lut(self, name, values):
         """Stretch the colours from the noise floor to the strongest signal on screen.
@@ -166,6 +219,7 @@ class Viewer:
                 self.add_row(latest)
         if latest is not None and not self.paused:
             self.draw_traces(latest)
+            self.draw_scales(latest)
         now = time.monotonic()
         if now - self.rate_start >= 1:
             rate = self.count / (now - self.rate_start)
@@ -175,6 +229,35 @@ class Viewer:
                                + ("   PAUSED" if self.paused else "")
                                + "   Space pause, A colours, Esc quit")
         self.root.after(40, self.tick)
+
+    def draw_scales(self, frame):
+        """Frequencies along the top of each trace, at every second grid line."""
+        for name, _ in RECEIVERS:
+            now = tuning(frame, name)
+            if now == self.shown.get(name):
+                continue
+            self.shown[name] = now
+            c = self.canvas[name]
+            for item in self.scale_items[name]:
+                c.delete(item)
+            self.scale_items[name] = []
+            if now is None:
+                self.titles[name].config(text=f"{name}   (no frequency in the frame)")
+                continue
+            centre, span = now
+            self.titles[name].config(text=f"{name}   {khz(centre)} kHz   span {khz(span)} kHz")
+            for k in range(-4, 5, 2):
+                self.scale_items[name].append(
+                    c.create_text(self.x_at(k * SPAN_POINTS / 10), 2, anchor="n",
+                                  text=khz(round(centre + k * span / 10)), fill="#8aa",
+                                  font=("Segoe UI", 8)))
+            for k, anchor in ((-5, "nw"), (5, "ne")):   # the span's edges
+                self.scale_items[name].append(
+                    c.create_text(self.x_at(k * SPAN_POINTS / 10) + (3 if k < 0 else -3), 14,
+                                  anchor=anchor, text=khz(round(centre + k * span / 10)),
+                                  fill="#566", font=("Segoe UI", 8)))
+            self.scale_items[name].append(
+                c.create_line(WIDTH // 2, 0, WIDTH // 2, TRACE_H, fill="#a33", dash=(3, 3)))
 
     def add_row(self, frame):
         inv = bytes(255 - b for b in frame[:2 * POINTS])
@@ -207,6 +290,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--port", help="the board's USB port, e.g. COM6")
     parser.add_argument("--file", help="play a saved capture instead of the board")
+    parser.add_argument("--dump", type=pathlib.Path,
+                        help="every second, write the last second's frames (4096 bytes each) here")
     args = parser.parse_args()
 
     frames, stop = queue.Queue(maxsize=200), threading.Event()
@@ -214,7 +299,7 @@ def main():
         source, what = threading.Thread(target=read_file, args=(args.file, frames, stop), daemon=True), args.file
     else:
         device = find_port(args.port)
-        source, what = threading.Thread(target=read_port, args=(device, frames, stop), daemon=True), device
+        source, what = threading.Thread(target=read_port, args=(device, frames, stop, args.dump), daemon=True), device
     source.start()
 
     root = tk.Tk()

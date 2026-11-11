@@ -8,3 +8,5 @@ __pycache__/
 .vscode/
 *.log
 .venv/
+captures/latest.bin
+captures/latest.tmp
