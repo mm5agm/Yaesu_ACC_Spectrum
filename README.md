@@ -481,7 +481,7 @@ six lines. Link on. Each probe on the ESP32's terminal for that line, the same
 point as in stage 1, so the two can be compared directly. Every line looks the
 same as in stage 1.
 
-**ACC pin 12 (terminal 38), CNT TX.** The heartbeat, `alive ` at 8.49 us a bit,
+**ACC pin 12 (terminal 38), CNT TX.** The heartbeat, `alive` and a zero byte, at 8.49 us a bit,
 0 to 3.28 V, exactly once a second: 15 bursts in a row, 0.9996 to 1.0002 s apart.
 Terminal 39 is joined to 38 by the link, so it isn't shown again. (The scope's
 frequency readout says 20 Hz here, and 26.5 Hz and 32.7 kHz on the stage 1
