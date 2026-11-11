@@ -375,26 +375,35 @@ Rules for my own firmware:
    | 3009-3012 | VFO B again | BCD: `07 47 40 00` is 7.4740.00 |
    | 3036-3039, 3064-3067 | VFO A + 1500 Hz | Hz, big-endian. Not sure what for |
    | 3040-3043, 3086-3089 | VFO B + 1500 Hz | the same |
-   | 3062 | Main span | low 4 bits: 0 = 1k, 1 = 2k, 2 = 5k, 3 = 10k, 4 = 20k, 5 = 50k, 6 = 100k, 7 = 200k (0x40 above it) |
-   | 3084 | Sub span | the same |
-   | 2926-2927 | follows Main's span: 395 at 10k, 237 at 20k, 94 at 50k | unknown |
-   | 2930-2931 | the same for Sub: 237 at 20k | unknown |
+   | 3062 | Main span and placement | low 4 bits the span: 0 = 1k, 1 = 2k, 2 = 5k, 3 = 10k, 4 = 20k, 5 = 50k, 6 = 100k, 7 = 200k, 8 = 500k, 9 = 1M. Top 2 bits the placement: 1 Center, 0 Cursor, 2 Fix |
+   | 3084 | Sub span and placement | the same |
+   | 3076-3079 | Main's left edge in Cursor and Fix | Hz, big-endian. Not kept up to date in Center |
+   | 3098-3101 | Sub's left edge in Cursor and Fix | the same |
+   | 2917 | Main's scope mode, the SS P3 character: 3 = W/F Center L, 6 = Cursor, 9 = Fix | |
+   | 2918 | Sub's scope mode, the same | |
+   | 2926-2927 | follows Main's span: about 4,740,000 / span, capped at 395 (1k-10k 395, 20k 237, 50k 94, 100k 47, 200k 23, 500k 9, 1M 4) | unknown |
+   | 2930-2931 | the same for Sub | unknown |
    | 2916 | 0 or 1: the Band button in the Radio Scope card, MAIN or SUB | |
-   | 3098-3101 | VFO B minus Sub's span (7,274,000 at 200k, 7,454,000 at 20k) | unknown |
-   | 3076-3079 | 14,073,370 throughout: VFO A before I first moved it | unknown |
 
-   Tested with Placement on Center only. The scope is centred on the VFO:
-   with VFO A tuned onto a steady carrier (14.097.07, USB), the carrier sat on
-   point 425 of 850.
+   In Center the scope is centred on the VFO: with VFO A tuned onto a steady
+   carrier (14.097.07, USB), the carrier sat on point 425 of 850. In Cursor and
+   Fix the left-edge field gives the window. Fix at 14.000 with 200k gave the
+   same trace as Center with VFO A on 14.100, to the point. The radio keeps a
+   separate span for Fix: Main's was 10k while Center was on 20k.
 
-   **The 850 points cover more than the span.** Tuning that carrier across the
-   scope moved it 328 points for 20.8 kHz at 50k (63.4 Hz a point) and 397
-   points for 10 kHz at 20k (25.2 Hz a point). So the span is the middle 790
-   points or so, with about 30 points beyond each edge. `live_view.py` draws
-   the scale that way.
+   **The 850 points cover more than the span.** At each span from 1k to 1M I
+   tuned VFO A a quarter of the span and measured how far the whole trace
+   moved. Every time it was 197-199 points, so the span is the middle 791
+   points (788 to 795), with about 30 points beyond each edge:
 
-   Still to do: Placement Fix and Cursor, the other spans (100k and up, 1k to
-   5k), CW and the other modes, and bytes 1701-2899.
+   | Span | 1k | 2k | 5k | 10k | 20k | 50k | 100k | 200k | 500k | 1M |
+   |---|---|---|---|---|---|---|---|---|---|---|
+   | Points in the span | 792 | 790 | 791 | 795 | 788 | 792 | 790 | 789 | 791 | 791 |
+
+   `live_view.py` draws the scale that way, for all three placements.
+
+   Still to do: CW and the other modes (the VFO + 1500 Hz fields), 3DSS, and
+   bytes 1701-2899.
 6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
    `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
    frequency and span are in the frame itself (step 5), so YWC doesn't need

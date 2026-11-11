@@ -14,7 +14,7 @@ What it draws, from what I've found so far (docs/plan.md, step 4):
   bytes 850-1699  Sub, the same
 Each byte is inverted: 0 is the strongest signal, so the viewer shows 255 minus
 the byte. The frequency scale comes from the frame too: each receiver's VFO and
-span (step 5). It assumes the scope is set to centre, the way I've tested it.
+span, and for Cursor and Fix the left edge (step 5). The red dashed line is the VFO.
 
 --dump writes the last second's frames to a file every second, back to back, so
 captures can be compared while the viewer stays open (step 5 of docs/plan.md).
@@ -42,27 +42,36 @@ except ImportError:
 
 POINTS = 850
 RECEIVERS = (("Main", 0), ("Sub", POINTS))
-# Where each receiver's centre and span sit in the frame (docs/plan.md, step 5).
-# Centre: the VFO in Hz, 4 bytes big-endian. Span: the low 4 bits of one byte,
-# counting up the radio's span list.
-CENTRE_AT = {"Main": 3068, "Sub": 3094}
+# Where each receiver's tuning sits in the frame (docs/plan.md, step 5). The VFO
+# and the left edge are in Hz, 4 bytes big-endian. The span byte holds the span
+# in its low 4 bits, counting up the radio's span list, and the placement in its
+# top 2: 1 Center, 0 Cursor, 2 Fix. In Center the scope is centred on the VFO
+# and the left-edge field isn't kept up to date; in Cursor and Fix it is.
+VFO_AT = {"Main": 3068, "Sub": 3094}
+LEFT_AT = {"Main": 3076, "Sub": 3098}
 SPAN_AT = {"Main": 3062, "Sub": 3084}
+PLACEMENTS = {0: "Cursor", 1: "Center", 2: "Fix"}
 SPANS = (1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000)
 # The 850 points cover a little more than the span: the span itself is the middle
-# 790 or so, with about 30 points either side. Measured by tuning a steady carrier
-# across the scope: 63.4 Hz a point at 50k, 25.2 at 20k (docs/plan.md, step 5).
-SPAN_POINTS = 790
+# 791, with about 30 points beyond each edge. Measured at every span from 1k to
+# 1M by tuning a known distance and seeing how far the trace moved: 788 to 795,
+# 791 on average (docs/plan.md, step 5).
+SPAN_POINTS = 791
 
 
 def tuning(frame, name):
-    """(centre Hz, span Hz) for a receiver, or None if the bytes don't make sense."""
+    """(centre Hz, span Hz, VFO Hz, placement) for a receiver, or None if the
+    bytes don't make sense."""
     if len(frame) < 3102:
         return None
-    centre = int.from_bytes(frame[CENTRE_AT[name]:CENTRE_AT[name] + 4], "big")
-    index = frame[SPAN_AT[name]] & 0x0F
-    if not 30_000 <= centre <= 75_000_000 or index >= len(SPANS):
+    word = lambda at: int.from_bytes(frame[at:at + 4], "big")
+    vfo, left = word(VFO_AT[name]), word(LEFT_AT[name])
+    index, placement = frame[SPAN_AT[name]] & 0x0F, PLACEMENTS.get(frame[SPAN_AT[name]] >> 6)
+    if not 30_000 <= vfo <= 75_000_000 or index >= len(SPANS) or placement is None:
         return None
-    return centre, SPANS[index]
+    span = SPANS[index]
+    centre = vfo if placement == "Center" else left + span // 2
+    return centre, span, vfo, placement
 
 
 def khz(hz):
@@ -244,8 +253,9 @@ class Viewer:
             if now is None:
                 self.titles[name].config(text=f"{name}   (no frequency in the frame)")
                 continue
-            centre, span = now
-            self.titles[name].config(text=f"{name}   {khz(centre)} kHz   span {khz(span)} kHz")
+            centre, span, vfo, placement = now
+            self.titles[name].config(text=f"{name}   VFO {khz(vfo)} kHz   span {khz(span)} kHz"
+                                          f"   {placement}")
             for k in range(-4, 5, 2):
                 self.scale_items[name].append(
                     c.create_text(self.x_at(k * SPAN_POINTS / 10), 2, anchor="n",
@@ -256,8 +266,10 @@ class Viewer:
                     c.create_text(self.x_at(k * SPAN_POINTS / 10) + (3 if k < 0 else -3), 14,
                                   anchor=anchor, text=khz(round(centre + k * span / 10)),
                                   fill="#566", font=("Segoe UI", 8)))
-            self.scale_items[name].append(
-                c.create_line(WIDTH // 2, 0, WIDTH // 2, TRACE_H, fill="#a33", dash=(3, 3)))
+            x = self.x_at((vfo - centre) * SPAN_POINTS / span)     # the VFO
+            if 0 <= x <= WIDTH:
+                self.scale_items[name].append(
+                    c.create_line(x, 0, x, TRACE_H, fill="#a33", dash=(3, 3)))
 
     def add_row(self, frame):
         inv = bytes(255 - b for b in frame[:2 * POINTS])
