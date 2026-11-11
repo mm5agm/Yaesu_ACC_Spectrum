@@ -598,4 +598,9 @@ goes into YWC as a serial input beside `Ft4222Bridge`.
 ## Licence
 
 GPL-3.0, the same as the other repositories. See [LICENSE](LICENSE). Its sections 15
-and 16 also cover the lack of warranty and liability. The repo is private for now.
+and 16 also cover the lack of warranty and liability.
+
+A library is coming, so other programs can read the ACC data without copying
+code from here. It will go in `library/` with its own licence, LGPL-3.0, so a
+program can use it without having to be GPL itself. See
+[docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
