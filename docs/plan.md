@@ -347,6 +347,12 @@ Rules for my own firmware:
 
    The captures are in `captures/`: `acc-20261111-113822-mode2.bin` (good) and
    `acc-20261111-113757-mode3.bin` (the wrong mode, kept for comparison).
+
+   **First spectrum on 2026-11-11.** `tools/live_view.py` draws bytes 0-849 and
+   850-1699, inverted, as a trace and a waterfall. They're Main and Sub: the
+   same signals, Sub shifted a little because its VFO was on a slightly
+   different frequency, and at a lower level. 24 frames a second on screen.
+   There's a picture in `docs/images/first-spectrum.png`.
 5. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
    (bit-inverted, they're in wfview's format), 850–1699 the Sub
    waterfall. Map the settings block (about 144 bytes at the end) by

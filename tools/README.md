@@ -18,3 +18,8 @@ python -m pip install -r tools/requirements.txt
   in every frame, when the SPI mode is right). It saves the raw stream in
   `captures/`. `--mode 2` or `--mode 3` switches the firmware's SPI mode first.
   See step 4 of [docs/plan.md](../docs/plan.md).
+
+- `live_view.py`: shows the scope live from the same port: a trace and a
+  waterfall for Main (bytes 0-849) and Sub (bytes 850-1699), each byte inverted.
+  No frequency scale yet. `--file captures/...bin` plays a saved capture instead.
+  Space pauses, A sets the colours again, Esc quits.
