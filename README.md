@@ -22,6 +22,20 @@ can use, and then YWC: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-p
 The level checks are in [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
+## On my bench
+
+Live from my FTdx101MP's ACC socket on 2026-11-11, drawn by
+`tools/live_view.py`: Main on 14,074 kHz and Sub on 7,074 kHz, both with a
+20 kHz span, showing the FT8 signals on each band. The frequency scale comes
+from the VFO and span in the radio's own frames.
+
+![The live view: Main on 14,074 kHz and Sub on 7,074 kHz, each a trace above a waterfall, with the FT8 signals just above each VFO.](docs/images/live-waterfall-ft8-14074-7074.png)
+
+The same, a moment later, in the 3DSS view (press D), the last 40 traces drawn
+in perspective:
+
+![The 3DSS view of the same two bands: the last 40 traces stacked in perspective, the FT8 signals standing up as a ridge on each.](docs/images/live-3dss-ft8-14074-7074.png)
+
 ## What I used
 
 - **A 13-pin mini-DIN extension cable, male to female.** The male end goes
