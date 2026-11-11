@@ -8,6 +8,7 @@ Never opens COM3 or COM4.
     python tools/live_view.py --port COM6
     python tools/live_view.py --file captures/acc-20261111-113822-mode2.bin
     python tools/live_view.py --dump captures/latest.bin   # for decoding, see below
+    python tools/live_view.py --3dss                       # start in 3DSS
 
 What it draws, from what I've found so far (docs/plan.md, step 4):
   bytes 0-849     Main, 850 points across the scope's span
@@ -19,7 +20,11 @@ span, and for Cursor and Fix the left edge (step 5). The red dashed line is the 
 --dump writes the last second's frames to a file every second, back to back, so
 captures can be compared while the viewer stays open (step 5 of docs/plan.md).
 
-Keys: Space pauses, A sets the colours again from what's on screen now, Esc quits.
+Keys: Space pauses, A sets the colours again from what's on screen now, D switches
+between waterfall and 3DSS, Esc quits.
+
+3DSS draws the way the radio's 3DSS mode does: the last 40 traces stacked going
+back into the screen in perspective, newest at the front.
 """
 
 import argparse
@@ -36,7 +41,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from check_frames import HEADER, find_port, open_port  # noqa: E402
 
 try:
-    from PIL import Image, ImageTk
+    from PIL import Image, ImageDraw, ImageTk
 except ImportError:
     sys.exit("Pillow isn't installed. Run: python -m pip install -r tools/requirements.txt")
 
@@ -79,6 +84,7 @@ def khz(hz):
 WIDTH = 1700            # pixels across; each point is two pixels wide
 TRACE_H = 160
 FALL_H = 220
+DEPTH = 40              # traces in the 3DSS picture
 
 
 def palette():
@@ -173,6 +179,9 @@ class Viewer:
         self.photos = {}
         self.items = {}
         self.titles = {}
+        self.dss = False
+        self.history = {n: collections.deque(maxlen=DEPTH) for n, _ in RECEIVERS}
+        self.dss_colours = [self.depth_colour(k) for k in range(DEPTH)]
         self.scale_items = {}
         self.shown = {}         # the (centre, span) each scale is drawn for
         root.configure(bg="black")
@@ -199,6 +208,7 @@ class Viewer:
         self.status.pack(fill="x", padx=4)
         root.bind("<space>", lambda e: setattr(self, "paused", not self.paused))
         root.bind("<a>", lambda e: self.lut.clear())
+        root.bind("<d>", lambda e: self.toggle_3dss())
         root.bind("<Escape>", lambda e: root.destroy())
         root.after(40, self.tick)
 
@@ -239,7 +249,7 @@ class Viewer:
             levels = "   ".join(f"{n} {lo} to {hi}" for n, (lo, hi) in self.range.items())
             self.status.config(text=f"{rate:.1f} frames a second   {levels}"
                                + ("   PAUSED" if self.paused else "")
-                               + "   Space pause, A colours, Esc quit")
+                               + "   Space pause, A colours, D 3DSS, Esc quit")
         self.root.after(40, self.tick)
 
     def draw_scales(self, frame):
@@ -284,8 +294,60 @@ class Viewer:
             fall.paste(fall.crop((0, 0, POINTS, FALL_H - 1)), (0, 1))
             fall.paste(Image.frombytes("P", (POINTS, 1), points.translate(self.lut[name])), (0, 0))
 
+    @staticmethod
+    def depth_colour(k):
+        """Front (k=0) bright yellow, fading through green to dark blue at the back."""
+        t = k / (DEPTH - 1)
+        stops = [(0, (255, 230, 60)), (0.35, (60, 220, 120)), (0.7, (30, 110, 200)), (1, (20, 30, 90))]
+        for (a, ca), (b, cb) in zip(stops, stops[1:]):
+            if a <= t <= b:
+                u = (t - a) / (b - a)
+                return tuple(round(ca[i] + (cb[i] - ca[i]) * u) for i in range(3))
+
+    def toggle_3dss(self):
+        self.dss = not self.dss
+        for name, _ in RECEIVERS:
+            line, image = self.items[name]
+            c = self.canvas[name]
+            c.coords(image, 0, 0 if self.dss else TRACE_H)
+            c.itemconfigure(line, state="hidden" if self.dss else "normal")
+            c.tag_raise(image)
+            for item in self.scale_items[name]:
+                c.tag_raise(item)
+
+    def draw_3dss(self, name):
+        """The last DEPTH traces in perspective. The front one is full width at
+        the bottom; each one further back sits higher, narrower and lower."""
+        H = TRACE_H + FALL_H
+        img = Image.new("RGB", (WIDTH, H))
+        d = ImageDraw.Draw(img)
+        lo, hi = self.trace_lo.get(name, 0), self.range.get(name, (0, 255))[1]
+        span = max(hi - lo, 1)
+        rows = list(self.history[name])
+        step = 2                                     # every second point is plenty
+        for k in range(len(rows) - 1, -1, -1):       # back to front, so front hides back
+            depth = k / DEPTH
+            scale = 1 - 0.45 * depth                 # width and height shrink going back
+            base = H - 6 - depth * (H * 0.55)        # and the baseline rises
+            x0 = WIDTH * (1 - scale) / 2 + depth * WIDTH * 0.08   # leans right, like the radio
+            amp = (H * 0.42) * scale
+            row = rows[k]
+            pts = [(x0 + i * WIDTH * scale / POINTS,
+                    base - min(max((row[i] - lo) / span, 0), 1) * amp)
+                   for i in range(0, POINTS, step)]
+            d.polygon([(pts[0][0], base)] + pts + [(pts[-1][0], base)], fill=(0, 0, 0))
+            d.line(pts, fill=self.dss_colours[k], width=2 if k == 0 else 1)
+        return img
+
     def draw_traces(self, frame):
         for name, start in RECEIVERS:
+            self.history[name].appendleft([255 - b for b in frame[start:start + POINTS]])
+            if self.dss:
+                line, image = self.items[name]
+                photo = ImageTk.PhotoImage(self.draw_3dss(name))
+                self.canvas[name].itemconfig(image, image=photo)
+                self.photos[name] = photo
+                continue
             _, hi = self.range.get(name, (0, 255))
             lo = self.trace_lo.get(name, 0)
             span = max(hi - lo, 1)
@@ -307,6 +369,7 @@ def main():
     parser.add_argument("--file", help="play a saved capture instead of the board")
     parser.add_argument("--dump", type=pathlib.Path,
                         help="every second, write the last second's frames (4096 bytes each) here")
+    parser.add_argument("--3dss", dest="dss", action="store_true", help="start in 3DSS (D switches)")
     args = parser.parse_args()
 
     frames, stop = queue.Queue(maxsize=200), threading.Event()
@@ -319,7 +382,9 @@ def main():
 
     root = tk.Tk()
     root.title(f"FTdx101MP ACC scope - {what}")
-    Viewer(root, frames)
+    viewer = Viewer(root, frames)
+    if args.dss:
+        viewer.toggle_3dss()
     root.mainloop()
     stop.set()
 

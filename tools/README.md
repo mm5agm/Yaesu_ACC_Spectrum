@@ -25,5 +25,6 @@ python -m pip install -r tools/requirements.txt
   (step 5 of the plan), for Center, Cursor and Fix. `--file
   captures/...bin` plays a saved capture instead. `--dump captures/latest.bin`
   writes the last second of frames there every second, for decoding while the
-  viewer stays open.
+  viewer stays open. D switches between the waterfall and a 3DSS view, the
+  last 40 traces drawn in perspective; `--3dss` starts in 3DSS.
   Space pauses, A sets the colours again, Esc quits.
