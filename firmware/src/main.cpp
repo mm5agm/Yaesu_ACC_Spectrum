@@ -13,7 +13,9 @@
 //   flags bit 0: the frame filled the buffer, so it may have been cut short
 //
 // Commands from the PC, one byte each:
-//   '2' or '3'  set the SPI mode, saved in flash, then restart
+//   '2' or '3'  set the SPI mode, saved in flash, then restart. Mode 2 is right
+//               for the FTdx101MP: the radio changes DATA2 on the edge mode 3
+//               samples on, so mode 3 gets bits flipped.
 //   'i'         send a status text packet
 //
 // Pins, from docs/plan.md "Wiring to the ESP32-S3":
@@ -42,16 +44,25 @@ static constexpr spi_host_device_t HOST = SPI2_HOST;
 static WORD_ALIGNED_ATTR uint8_t* bufs[QUEUED];
 static spi_slave_transaction_t trans[QUEUED];
 static Preferences prefs;
-static uint8_t spiMode = 3;
+static uint8_t spiMode = 2;           // mode 2 proven on 2026-11-11; mode 3 flips bits
 static uint16_t seq = 0;
 
-static uint32_t frames = 0, bytesIn = 0, cutShort = 0, lastFrameMs = 0;
+static uint32_t frames = 0, bytesIn = 0, cutShort = 0, dropped = 0, lastFrameMs = 0;
 
+// USB send buffer: room for several frames, so a slow moment on the PC doesn't
+// lose one. Set before Serial.begin().
+static constexpr size_t USB_TX_BYTES = 32768;
+
+// A packet goes out whole or not at all. Writing part of one (what happens when
+// the buffer is full and the timeout is 0) joins pieces of different frames
+// together on the PC. A dropped packet still takes a sequence number, so the PC
+// sees the gap.
 static void sendPacket(char type, uint8_t flags, const uint8_t* data, uint16_t len) {
     uint8_t h[8] = {'Y', 'A', (uint8_t)type, flags,
                     (uint8_t)(len & 0xFF), (uint8_t)(len >> 8),
                     (uint8_t)(seq & 0xFF), (uint8_t)(seq >> 8)};
     seq++;
+    if (Serial.availableForWrite() < (int)(sizeof h + len)) { dropped++; return; }
     Serial.write(h, sizeof h);
     if (len) Serial.write(data, len);
 }
@@ -64,8 +75,9 @@ static void sendText(const char* text) {
 static void status() {
     char s[160];
     snprintf(s, sizeof s,
-             "ACC pipe: SPI mode %u, frames %lu, bytes %lu, cut short %lu, DATA1 %d, up %lu s",
+             "ACC pipe: SPI mode %u, frames %lu, bytes %lu, cut short %lu, not sent %lu, DATA1 %d, up %lu s",
              spiMode, (unsigned long)frames, (unsigned long)bytesIn, (unsigned long)cutShort,
+             (unsigned long)dropped,
              digitalRead(PIN_DATA1), (unsigned long)(millis() / 1000));
     sendText(s);
 }
@@ -82,14 +94,15 @@ static void queue(int i) {
 }
 
 void setup() {
+    Serial.setTxBufferSize(USB_TX_BYTES);
     Serial.setTxTimeoutMs(0);          // no PC reading: drop, don't stall
     Serial.begin();
     Serial0.begin(115200);
     led(0, 0, 8);
 
     prefs.begin("accpipe", false);
-    spiMode = prefs.getUChar("mode", 3);
-    if (spiMode != 2 && spiMode != 3) spiMode = 3;
+    spiMode = prefs.getUChar("mode", 2);
+    if (spiMode != 2 && spiMode != 3) spiMode = 2;
 
     pinMode(PIN_DATA1, INPUT);
 

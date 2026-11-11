@@ -75,6 +75,11 @@ Radio ACC socket <- cable male | cable female <- IC-7300MK2 plug -> wires -> bre
 
 All 13 pins of the extension cable are confirmed wired.
 
+**The wire colours in this project are those of the ready-made lead, which came
+from Icom with the plug already soldered on. They aren't the colours you get by
+cutting the Amazon extension cable in two. If you cut that cable, meter every wire
+to find its pin, and don't go by the colours here.**
+
 Icom and Yaesu number the socket the same way. Icom's drawing (IC-7300MK2 Basic
 Manual, page 74) is just upside down, with the key at the bottom. The colours below
 are from that page and refer to Icom's supplied cable, so they're to be metered
@@ -248,9 +253,9 @@ little, but only enough to be a dumb pipe:
 
 - **SPI slave:** read the bytes while CS is low (ESP-IDF's `spi_slave`
   driver with DMA does this).
-- **USB:** write the bytes out unchanged over USB CDC. No header, no
-  checksum. `Ft710ScopeFrame.Assembler` already finds frame boundaries in
-  an unaligned stream by their trailer.
+- **USB:** write the bytes out unchanged over USB CDC. In the end I put a
+  small header in front of each frame (see step 3), because the FTdx101's
+  frames have no trailer to find them by.
 - **Heartbeat:** the FT-710 answers its own heartbeat inside the radio; on
   the FTdx101 something outside has to. Either the ESP32 echoes `alive\0`
   back, or pins 11 and 12 are simply linked by a wire and the ESP32 needn't
@@ -275,9 +280,10 @@ If my firmware gets no frames, theirs is still there to help find out why.
 
 What's left to check:
 
-- Whether FTdx101 frames end with the same `FF 01 EE 01` trailer as the
-  FT-710's. If they don't, the assembler needs another way to find frame
-  boundaries (CS going high is the obvious one, and the ESP32 can mark it).
+- ~~Whether FTdx101 frames end with the same `FF 01 EE 01` trailer as the
+  FT-710's.~~ They don't (2026-11-11). The firmware takes the frame edges
+  from CS and sends each frame behind its own header, so the PC never has to
+  search for them.
 - The extra content on the FTdx101: the Sub receiver's waterfall at bytes
   850–1699, and whatever differs in the settings block.
 - On the YWC side, the source is a USB serial port instead of the FT4222H.
@@ -305,7 +311,7 @@ Rules for my own firmware:
    passed on 2026-11-10;** see docs/bench-notes.md.
 3. **My own firmware, first version.** The dumb pipe described above, in
    `firmware/`, built with PlatformIO (the toolchain YWC_IWC_PADDLE uses).
-   **Written and compiled on 2026-11-11, not yet flashed:**
+   **Flashed and working on 2026-11-11:**
    - SPI slave on GPIO10 (clock), GPIO11 (DATA2) and GPIO13 (CS), with DMA.
      GPIO14 (DATA1) is left as a plain input; it carries nothing so far.
    - Raw bytes out over the native USB (the socket marked USB), unchanged.
@@ -313,20 +319,34 @@ Rules for my own firmware:
      can carry.
    - The heartbeat is left to the link on terminals 38 and 39. GPIO38 and
      GPIO39 stay inputs, so nothing else drives the line.
-   - **SPI mode is a setting.** The clock idles high, so it's mode 2 or 3, and
-     I don't yet know which edge the radio changes the data on. Build both and
-     keep the one whose frames make sense.
-   - Flash it through the COM socket with the radio's DC lead out, move the
-     lead to the USB socket, then power up in the usual order: ESP32 first,
-     then the radio.
-4. **Check the frames.** `tools/check_frames.py`, written on 2026-11-11 and not yet
-   run on the board. It reads the native USB port
-   (found the same way as in `erase_esp32.py`, never COM3 or COM4) and
-   reports frames a second, frame length, and whether each frame ends with
-   the FT-710's `FF 01 EE 01` trailer. It should be 25 frames a second of
-   4096 bytes. If the trailer isn't there, the firmware marks each CS rising
-   edge instead, so the frames can still be found. Save a few seconds of raw
-   bytes in `captures/` for the next step.
+   - **SPI mode 2.** The clock idles high, so it's mode 2 or 3. Mode 3 samples
+     on the edge where the radio changes DATA2, so bits flip. Mode 2 gives the
+     same end of data and the same fixed bytes in every frame. It's still a
+     setting, saved in flash.
+   - Whole packets only, through a 32 KB USB send buffer. The first build lost
+     about eight packets in nine and joined pieces of frames together.
+   - Flash it through the COM socket with the radio's DC lead out, then power
+     up in the usual order: ESP32 first, then the radio. A second lead stays
+     in the USB socket, so nothing moves between flashing and capturing.
+4. **Check the frames.** `tools/check_frames.py` reads the native USB port
+   (found by its USB ID, 303A:1001, never COM3 or COM4) and reports frames a
+   second, frame length and where the data ends. **Done on 2026-11-11**, in
+   SPI mode 2:
+   - 25.0 frames a second, matching the 25.00 Hz the scope measured on CS,
+     with no packets lost. Every frame 4096 bytes. (The first runs showed 26
+     a second: the frames the board had buffered before the port opened came
+     in as a burst. `check_frames.py` now throws away the first half second.)
+   - No `FF 01 EE 01` trailer anywhere in the frame.
+   - Bytes 0-1699 change from frame to frame and run smoothly, about 0x98 to
+     0xE9: the two waterfalls step 5 expects, 850 bytes each.
+   - Bytes 1700-1701 are always `01 43`.
+   - Bytes 1702-2899 change from frame to frame. Not decoded yet.
+   - Bytes 2900-3101 are the same in every frame: probably the settings block.
+   - Bytes 3102-4095 are zeros, which matches the scope's 8.7 ms of low DATA2
+     at the end of each frame.
+
+   The captures are in `captures/`: `acc-20261111-113822-mode2.bin` (good) and
+   `acc-20261111-113757-mode3.bin` (the wrong mode, kept for comparison).
 5. **Decode the FTdx101 frame.** Bytes 0–849 are the Main waterfall
    (bit-inverted, they're in wfview's format), 850–1699 the Sub
    waterfall. Map the settings block (about 144 bytes at the end) by

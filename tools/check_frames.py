@@ -10,8 +10,13 @@ opens a port with that USB ID, and never COM3 or COM4, the radio's ports on my P
     python tools/check_frames.py --port COM6   # name the port yourself
 
 It reports frames a second (25 expected), the frame lengths (4096 expected), and
-whether each frame ends with the FT-710's trailer FF 01 EE 01, and saves the raw
-stream as captures/acc-<date>-<time>-mode<N>.bin for decoding.
+where the data ends in each frame, and saves the raw stream as
+captures/acc-<date>-<time>-mode<N>.bin for decoding.
+
+The FTdx101MP's frames don't end with the FT-710's trailer FF 01 EE 01. Each one
+has 3102 bytes of data and then zeros. With the right SPI mode (2) the data ends
+at the same byte in every frame; with the wrong one (3) it wanders by a byte and
+single bits flip, so a steady end is the check that the mode is right.
 
 The firmware's packet format is in firmware/src/main.cpp: 'Y' 'A' type flags
 length(uint16 LE) sequence(uint16 LE), then the payload. Type 'F' is a frame,
@@ -137,15 +142,15 @@ def report(stream, seconds, mode_text):
         print(f"{cut} frames filled the firmware's 8192-byte buffer, so they may be cut short.")
     if gaps:
         print(f"{gaps} gaps in the packet sequence: the PC or the USB dropped packets.")
+    data_ends = collections.Counter(len(f.rstrip(b"\0")) for f in frames)
+    print("Data ends at byte: " + ", ".join(f"{o} x{c}" for o, c in data_ends.most_common(4))
+          + "  (3102 in every frame on the FTdx101MP)")
+    if len(data_ends) > 1:
+        print("The end wanders, so bits are being sampled on the wrong edge. "
+              "Try the other SPI mode (--mode 2 or --mode 3).")
     ends = sum(1 for f in frames if f.endswith(TRAILER))
-    print(f"Ending with FF 01 EE 01: {ends} of {len(frames)}")
-    if ends < len(frames):
-        where = collections.Counter(m.start() for f in frames for m in re.finditer(re.escape(TRAILER), f))
-        if where:
-            print("FF 01 EE 01 found at offsets: "
-                  + ", ".join(f"{o} x{c}" for o, c in where.most_common(5)))
-        else:
-            print("FF 01 EE 01 isn't in any frame. Try the other SPI mode (--mode 2 or --mode 3).")
+    if ends:
+        print(f"Ending with the FT-710's FF 01 EE 01: {ends} of {len(frames)}")
     f = frames[len(frames) // 2]
     print("A frame's first 32 bytes: " + f[:32].hex(" ").upper())
     print("and last 32:              " + f[-32:].hex(" ").upper())
@@ -166,7 +171,12 @@ def main():
 
     stream = bytearray()
     with open_port(device) as s:
-        s.reset_input_buffer()
+        # The first half second holds what the board buffered while nothing was
+        # reading, with gaps in it, before the live frames. Throw it away, so the
+        # gap count is about the live stream.
+        settle = time.monotonic()
+        while time.monotonic() - settle < 0.5:
+            s.read(65536)
         s.write(b"i")                 # a status packet, so the report shows the mode
         start = time.monotonic()
         while time.monotonic() - start < args.seconds:
