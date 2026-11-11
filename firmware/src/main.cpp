@@ -1,4 +1,5 @@
-// Yaesu ACC spectrum, first version: a dumb pipe.
+// Yaesu ACC spectrum firmware, version 2: a dumb pipe, plus edge counts for
+// checking the wiring.
 //
 // The FTdx101MP sends its scope data out of the ACC socket as SPI: CS (pin 6)
 // low for each frame, CLOCK (pin 5) at about 2 MHz, data on DATA2 (pin 4). This
@@ -18,6 +19,13 @@
 //               samples on, so mode 3 gets bits flipped.
 //   'i'         send a status text packet
 //
+// Status text, every 5 s and on 'i', always starts "ACC pipe:" then the
+// firmware version. "edges/s" counts rising edges in the last second on each
+// input, from the ESP32's pulse counter (PCNT), which listens alongside the SPI
+// slave without disturbing it. With the radio streaming, expect CS 25, CLOCK
+// about 819200 (25 x 4096 x 8) and DATA2 in the thousands. A line reading 0
+// while the others count points at that wire.
+//
 // Pins, from docs/plan.md "Wiring to the ESP32-S3":
 //   GPIO10 CLOCK, GPIO11 DATA2, GPIO13 CS: SPI slave inputs
 //   GPIO14 DATA1: plain input, nothing on it so far
@@ -28,6 +36,10 @@
 #include <Preferences.h>
 #include <driver/spi_slave.h>
 #include <esp_heap_caps.h>
+#include <driver/pcnt.h>
+#include <driver/gpio.h>
+
+static constexpr const char* FW_VERSION = "2.0.0";
 
 static constexpr int PIN_CLK = 10;
 static constexpr int PIN_DATA2 = 11;   // the radio's data, into the slave's MOSI
@@ -57,6 +69,72 @@ static constexpr size_t USB_TX_BYTES = 32768;
 // the buffer is full and the timeout is 0) joins pieces of different frames
 // together on the PC. A dropped packet still takes a sequence number, so the PC
 // sees the gap.
+// Edge counting. Each input gets a PCNT unit counting rising edges. The
+// hardware counter is 16 bits, so it wraps back to 0 at EDGE_LIMIT and an
+// interrupt adds that to the total, about 27 times a second on the clock.
+struct EdgeInput { const char* name; int pin; pcnt_unit_t unit; };
+static EdgeInput edgeInputs[] = {
+    {"CS", PIN_CS, PCNT_UNIT_0},
+    {"CLOCK", PIN_CLK, PCNT_UNIT_1},
+    {"DATA2", PIN_DATA2, PCNT_UNIT_2},
+    {"DATA1", PIN_DATA1, PCNT_UNIT_3},
+};
+static constexpr int EDGE_INPUTS = sizeof edgeInputs / sizeof edgeInputs[0];
+static constexpr int16_t EDGE_LIMIT = 30000;
+static volatile uint32_t edgeWraps[EDGE_INPUTS];
+static uint32_t edgeLastTotal[EDGE_INPUTS], edgesPerSec[EDGE_INPUTS];
+
+static void IRAM_ATTR edgeWrapped(void* arg) {
+    edgeWraps[(int)(intptr_t)arg]++;
+}
+
+static void edgeSetup() {
+    pcnt_isr_service_install(0);
+    for (int i = 0; i < EDGE_INPUTS; i++) {
+        pcnt_config_t c = {};
+        c.pulse_gpio_num = edgeInputs[i].pin;
+        c.ctrl_gpio_num = PCNT_PIN_NOT_USED;
+        c.channel = PCNT_CHANNEL_0;
+        c.unit = edgeInputs[i].unit;
+        c.pos_mode = PCNT_COUNT_INC;   // rising edges
+        c.neg_mode = PCNT_COUNT_DIS;
+        c.lctrl_mode = PCNT_MODE_KEEP;
+        c.hctrl_mode = PCNT_MODE_KEEP;
+        c.counter_h_lim = EDGE_LIMIT;
+        c.counter_l_lim = -1;
+        pcnt_unit_config(&c);
+        // The driver turns the pull-up on. These lines must stay plain inputs,
+        // the same as before, so turn it off again.
+        gpio_set_pull_mode((gpio_num_t)edgeInputs[i].pin, GPIO_FLOATING);
+        // Ignore pulses shorter than 100 ns (8 cycles at 80 MHz), so ringing
+        // on an edge counts once. A clock half-cycle is 250 ns.
+        pcnt_set_filter_value(edgeInputs[i].unit, 8);
+        pcnt_filter_enable(edgeInputs[i].unit);
+        pcnt_event_enable(edgeInputs[i].unit, PCNT_EVT_H_LIM);
+        pcnt_isr_handler_add(edgeInputs[i].unit, edgeWrapped, (void*)(intptr_t)i);
+        pcnt_counter_clear(edgeInputs[i].unit);
+        pcnt_counter_resume(edgeInputs[i].unit);
+    }
+}
+
+static uint32_t edgeTotal(int i) {
+    uint32_t wraps;
+    int16_t count;
+    do {                                 // read again if it wrapped meanwhile
+        wraps = edgeWraps[i];
+        pcnt_get_counter_value(edgeInputs[i].unit, &count);
+    } while (wraps != edgeWraps[i]);
+    return wraps * (uint32_t)EDGE_LIMIT + (uint32_t)count;
+}
+
+static void edgeTick() {                 // once a second
+    for (int i = 0; i < EDGE_INPUTS; i++) {
+        uint32_t t = edgeTotal(i);
+        edgesPerSec[i] = t - edgeLastTotal[i];
+        edgeLastTotal[i] = t;
+    }
+}
+
 static void sendPacket(char type, uint8_t flags, const uint8_t* data, uint16_t len) {
     uint8_t h[8] = {'Y', 'A', (uint8_t)type, flags,
                     (uint8_t)(len & 0xFF), (uint8_t)(len >> 8),
@@ -73,12 +151,15 @@ static void sendText(const char* text) {
 }
 
 static void status() {
-    char s[160];
-    snprintf(s, sizeof s,
-             "ACC pipe: SPI mode %u, frames %lu, bytes %lu, cut short %lu, not sent %lu, DATA1 %d, up %lu s",
-             spiMode, (unsigned long)frames, (unsigned long)bytesIn, (unsigned long)cutShort,
-             (unsigned long)dropped,
+    char s[240];
+    int n = snprintf(s, sizeof s,
+             "ACC pipe: version %s, SPI mode %u, frames %lu, bytes %lu, cut short %lu, not sent %lu, DATA1 %d, up %lu s, edges/s",
+             FW_VERSION, spiMode, (unsigned long)frames, (unsigned long)bytesIn,
+             (unsigned long)cutShort, (unsigned long)dropped,
              digitalRead(PIN_DATA1), (unsigned long)(millis() / 1000));
+    for (int i = 0; i < EDGE_INPUTS && n > 0 && n < (int)sizeof s; i++)
+        n += snprintf(s + n, sizeof s - n, " %s %lu", edgeInputs[i].name,
+                      (unsigned long)edgesPerSec[i]);
     sendText(s);
 }
 
@@ -120,6 +201,8 @@ void setup() {
     slave.queue_size = QUEUED;
 
     ESP_ERROR_CHECK(spi_slave_initialize(HOST, &bus, &slave, SPI_DMA_CH_AUTO));
+
+    edgeSetup();
 
     for (int i = 0; i < QUEUED; i++) {
         bufs[i] = (uint8_t*)heap_caps_malloc(BUF_BYTES, MALLOC_CAP_DMA);
@@ -163,6 +246,9 @@ void loop() {
         if (frames % 25 == 0) led(0, frames % 50 ? 4 : 12, 0);   // green, pulsing once a second at 25 frames/s
     }
     if (millis() - lastFrameMs > 1000) led(8, 4, 0);             // amber: no frames for a second
+
+    static uint32_t lastEdgeTick = 0;
+    if (millis() - lastEdgeTick >= 1000) { lastEdgeTick += 1000; edgeTick(); }
 
     static uint32_t lastStatus = 0;
     if (millis() - lastStatus > 5000) { lastStatus = millis(); status(); }
