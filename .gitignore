@@ -10,3 +10,4 @@ __pycache__/
 .venv/
 captures/latest.bin
 captures/latest.tmp
+firmware/release/
