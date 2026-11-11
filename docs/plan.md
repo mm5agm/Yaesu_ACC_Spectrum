@@ -429,11 +429,12 @@ Rules for my own firmware:
    tones over 16 s, with the end of the slot) and
    `docs/images/audio-radio-scotland-810-am.png` (speech, and the waveform at
    t0).
-6. **YWC input.** A serial-port source in `Yaesu_Sdr_Worker` beside
-   `Ft4222Bridge`, feeding the existing `Ft710ScopeFrame` path. Centre
-   frequency and span are in the frame itself (step 5), so YWC doesn't need
-   CAT for them, unlike the FT-710. Then the
-   FTdx101 additions: Main and Sub waterfalls, each placed on its own VFO.
+6. **A library, then YWC.** Planned in
+   [library-and-ywc-plan.md](library-and-ywc-plan.md): firmware v2, an LGPL-3
+   .NET library in this repo that YWC uses, the protocol written down, and a
+   setup guide in YWC that checks each step. Centre frequency and span are in
+   the frame itself (step 5), so YWC doesn't need CAT for them, unlike the
+   FT-710.
 7. **Compare with the RSP1 and RSP1B.** Once YWC draws a spectrum from the ACC
    data, compare it with the two SDRs on the 9 MHz IF outputs: the RSP1B on VFO
    A and the RSP1 on VFO B. Receive only: off-air signals, or a signal
