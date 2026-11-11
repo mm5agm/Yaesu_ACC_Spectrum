@@ -2,10 +2,10 @@
 
 ☕ [Buy me a coffee](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=mm5agm.software%40outlook.com&item_name=Yaesu+ACC+Spectrum&currency_code=GBP) if this is useful to you.
 
-Can Yaesu Web Control (YWC) get a Yaesu's own scope data from the ACC socket,
-through an ESP32-S3 over USB?
+This reads a Yaesu's own scope data from the ACC socket, through an ESP32-S3
+over USB, for Yaesu Web Control (YWC) and other programs.
 
-The work starts on an FTdx101MP. The FTDX101D and FTDX10 are expected to send the
+It works on my FTdx101MP. The FTDX101D and FTDX10 are expected to send the
 same data on the same socket ([other people's projects](#credits-and-background) have done it on the FTDX10),
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
@@ -573,9 +573,11 @@ found.
 | `tools/` | Capture and analysis scripts |
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
 | `docs/` | The plan and the bench notes |
+| `library/` | Coming: a .NET library that reads the board's frames, for any program to use |
 
-If this works, the firmware, wiring and bench notes stay here, and the PC code
-goes into YWC as a serial input beside `Ft4222Bridge`.
+It works, so the firmware, wiring and bench notes stay here, along with the
+library. YWC will use the library to show the ACC spectrum. See
+[docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
 
 ## Rules
 
