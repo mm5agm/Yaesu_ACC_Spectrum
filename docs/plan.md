@@ -373,13 +373,13 @@ Rules for my own firmware:
    | 3094-3097 | VFO B, the Sub scope's centre | Hz, 4 bytes big-endian |
    | 2961-2964 | VFO A again | BCD, 10 Hz steps: `14 07 50 00` is 14.0750.00 |
    | 3009-3012 | VFO B again | BCD: `07 47 40 00` is 7.4740.00 |
-   | 3036-3039, 3064-3067 | VFO A + 1500 Hz | Hz, big-endian. Not sure what for |
-   | 3040-3043, 3086-3089 | VFO B + 1500 Hz | the same |
+   | 3036-3039, 3064-3067 | VFO A + 1500 Hz + IF shift: where the radio draws Main's passband | Hz, big-endian |
+   | 3040-3043, 3086-3089 | the same for VFO B | Hz, big-endian |
    | 3062 | Main span and placement | low 4 bits the span: 0 = 1k, 1 = 2k, 2 = 5k, 3 = 10k, 4 = 20k, 5 = 50k, 6 = 100k, 7 = 200k, 8 = 500k, 9 = 1M. Top 2 bits the placement: 1 Center, 0 Cursor, 2 Fix |
    | 3084 | Sub span and placement | the same |
    | 3076-3079 | Main's left edge in Cursor and Fix | Hz, big-endian. Not kept up to date in Center |
    | 3098-3101 | Sub's left edge in Cursor and Fix | the same |
-   | 2917 | Main's scope mode, the SS P3 character: 3 = W/F Center L, 6 = Cursor, 9 = Fix | |
+   | 2917 | Main's scope mode, the SS P3 character: 0-2 = 3DSS, 3 = W/F Center L, 6 = Cursor, 9 = Fix | |
    | 2918 | Sub's scope mode, the same | |
    | 2926-2927 | follows Main's span: about 4,740,000 / span, capped at 395 (1k-10k 395, 20k 237, 50k 94, 100k 47, 200k 23, 500k 9, 1M 4) | unknown |
    | 2930-2931 | the same for Sub | unknown |
@@ -402,8 +402,13 @@ Rules for my own firmware:
 
    `live_view.py` draws the scale that way, for all three placements.
 
-   The VFO + 1500 Hz fields stay at + 1500 in USB, LSB and CW-U, so they aren't
-   the mode's offset. Still to do: what they are, and 3DSS.
+   The VFO + 1500 Hz fields stay at + 1500 in USB, LSB, CW-U and AM, and with
+   the IF width changed, but an IF shift of +500 Hz moved them to + 2000. So
+   they're the passband marker the radio draws on its scope.
+
+   3DSS changes nothing but byte 2917: the spectrum bytes have the same layout
+   and levels, and the span byte stays the same. 3DSS is only how the radio
+   draws the picture.
 
    **Bytes 1700-2899 are the audio scope**, the AF-FFT and oscilloscope the
    radio can show for each receiver. Found by tuning the steady carrier into
