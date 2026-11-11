@@ -38,8 +38,9 @@
 #include <esp_heap_caps.h>
 #include <driver/pcnt.h>
 #include <driver/gpio.h>
+#include <esp_timer.h>
 
-static constexpr const char* FW_VERSION = "2.0.0";
+static constexpr const char* FW_VERSION = "2.0.1";
 
 static constexpr int PIN_CLK = 10;
 static constexpr int PIN_DATA2 = 11;   // the radio's data, into the slave's MOSI
@@ -70,8 +71,11 @@ static constexpr size_t USB_TX_BYTES = 32768;
 // together on the PC. A dropped packet still takes a sequence number, so the PC
 // sees the gap.
 // Edge counting. Each input gets a PCNT unit counting rising edges. The
-// hardware counter is 16 bits, so it wraps back to 0 at EDGE_LIMIT and an
-// interrupt adds that to the total, about 27 times a second on the clock.
+// hardware counter is 16 bits and goes back to 0 at EDGE_LIMIT, so a timer
+// reads every counter each 10 ms and adds what it has gained since the last
+// read, allowing for the wrap. In 10 ms the 2 MHz clock gives about 8200
+// edges, well inside EDGE_LIMIT. (Version 2.0.0 counted the wraps with the
+// PCNT interrupt, which never fired, so CLOCK read short.)
 struct EdgeInput { const char* name; int pin; pcnt_unit_t unit; };
 static EdgeInput edgeInputs[] = {
     {"CS", PIN_CS, PCNT_UNIT_0},
@@ -81,15 +85,22 @@ static EdgeInput edgeInputs[] = {
 };
 static constexpr int EDGE_INPUTS = sizeof edgeInputs / sizeof edgeInputs[0];
 static constexpr int16_t EDGE_LIMIT = 30000;
-static volatile uint32_t edgeWraps[EDGE_INPUTS];
+static volatile uint32_t edgeTotals[EDGE_INPUTS];
+static int16_t edgeLastCount[EDGE_INPUTS];
 static uint32_t edgeLastTotal[EDGE_INPUTS], edgesPerSec[EDGE_INPUTS];
 
-static void IRAM_ATTR edgeWrapped(void* arg) {
-    edgeWraps[(int)(intptr_t)arg]++;
+static void edgeSample(void*) {          // every 10 ms, from esp_timer's task
+    for (int i = 0; i < EDGE_INPUTS; i++) {
+        int16_t c = 0;
+        pcnt_get_counter_value(edgeInputs[i].unit, &c);
+        int32_t gained = (int32_t)c - edgeLastCount[i];
+        if (gained < 0) gained += EDGE_LIMIT;
+        edgeLastCount[i] = c;
+        edgeTotals[i] += (uint32_t)gained;
+    }
 }
 
 static void edgeSetup() {
-    pcnt_isr_service_install(0);
     for (int i = 0; i < EDGE_INPUTS; i++) {
         pcnt_config_t c = {};
         c.pulse_gpio_num = edgeInputs[i].pin;
@@ -110,26 +121,20 @@ static void edgeSetup() {
         // on an edge counts once. A clock half-cycle is 250 ns.
         pcnt_set_filter_value(edgeInputs[i].unit, 8);
         pcnt_filter_enable(edgeInputs[i].unit);
-        pcnt_event_enable(edgeInputs[i].unit, PCNT_EVT_H_LIM);
-        pcnt_isr_handler_add(edgeInputs[i].unit, edgeWrapped, (void*)(intptr_t)i);
         pcnt_counter_clear(edgeInputs[i].unit);
         pcnt_counter_resume(edgeInputs[i].unit);
     }
-}
-
-static uint32_t edgeTotal(int i) {
-    uint32_t wraps;
-    int16_t count;
-    do {                                 // read again if it wrapped meanwhile
-        wraps = edgeWraps[i];
-        pcnt_get_counter_value(edgeInputs[i].unit, &count);
-    } while (wraps != edgeWraps[i]);
-    return wraps * (uint32_t)EDGE_LIMIT + (uint32_t)count;
+    esp_timer_create_args_t t = {};
+    t.callback = edgeSample;
+    t.name = "edges";
+    esp_timer_handle_t h;
+    ESP_ERROR_CHECK(esp_timer_create(&t, &h));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(h, 10000));
 }
 
 static void edgeTick() {                 // once a second
     for (int i = 0; i < EDGE_INPUTS; i++) {
-        uint32_t t = edgeTotal(i);
+        uint32_t t = edgeTotals[i];
         edgesPerSec[i] = t - edgeLastTotal[i];
         edgeLastTotal[i] = t;
     }
