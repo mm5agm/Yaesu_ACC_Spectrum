@@ -63,8 +63,26 @@ Download `AccSpectrumViewer-x.y.z-win-x64.zip` from the
 anywhere, and run `AccSpectrumViewer.exe`. Nothing needs installing. .NET is
 inside the exe, and esptool and the firmware are in the folders beside it.
 
-Windows SmartScreen may warn about it the first time, because it isn't signed.
-Choose **More info**, then **Run anyway**.
+### The Windows warning the first time
+
+The first time you run it, Windows may stop it with a blue "Windows protected
+your PC" box. That's Microsoft Defender SmartScreen. It shows this for programs
+that aren't signed with a paid code-signing certificate, and for programs few
+people have downloaded yet. The viewer is neither, so the warning is expected.
+It doesn't mean anything was found in it.
+
+1. Click **More info**. At first the only button is **Don't run**.
+
+   ![The first SmartScreen box: "Windows protected your PC", with a More info link and a Don't run button.](../docs/images/smartscreen-1-more-info.png)
+
+2. Check it says **Application: AccSpectrumViewer.exe**, then click **Run anyway**.
+   "Unknown publisher" is expected, because the exe isn't signed.
+
+   ![The second SmartScreen box after More info: Application AccSpectrumViewer.exe, Publisher Unknown publisher, with Run anyway and Don't run buttons.](../docs/images/smartscreen-2-run-anyway.png)
+
+Windows remembers your choice, so it only asks once for each version.
+Only download the zip from this repository's
+[releases page](https://github.com/mm5agm/Yaesu_ACC_Spectrum/releases).
 
 ## Building it
 
