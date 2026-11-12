@@ -13,3 +13,7 @@ captures/latest.tmp
 firmware/release/
 library/**/bin/
 library/**/obj/
+viewer/**/bin/
+viewer/**/obj/
+viewer/esptool/
+viewer/out/
