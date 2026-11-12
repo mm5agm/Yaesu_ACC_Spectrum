@@ -23,3 +23,36 @@ jobs:
           dotnet-version: '10.0.x'
       - run: dotnet test library/YaesuAccScope.slnx -c Release
       - run: dotnet pack library/src/YaesuAccScope -c Release -o library/out
+
+  # Publishes to nuget.org through Trusted Publishing: nuget.org trusts this
+  # workflow file (library.yml) in this repo for packages named YaesuAccScope*,
+  # and NuGet/login swaps GitHub's OIDC token for a key that lasts an hour.
+  # There is no API key stored anywhere. The policy is under Trusted
+  # Publishing on mm5agm's nuget.org account; renaming this file breaks it.
+  #
+  # A version on nuget.org can be unlisted but never deleted, so the tag must
+  # match <Version> in the csproj or nothing is pushed.
+  publish:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/library-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Tag matches the csproj version
+        run: |
+          tag="${GITHUB_REF_NAME#library-v}"
+          ver=$(grep -oP '(?<=<Version>)[^<]+' library/src/YaesuAccScope/YaesuAccScope.csproj)
+          echo "tag $tag, csproj $ver"
+          [ "$tag" = "$ver" ] || { echo "::error::Tag library-v$tag does not match <Version>$ver</Version>"; exit 1; }
+      - run: dotnet pack library/src/YaesuAccScope -c Release -o library/out
+      - uses: NuGet/login@v1
+        id: login
+        with:
+          user: mm5agm
+      - run: dotnet nuget push "library/out/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
