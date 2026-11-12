@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A small Windows program that writes the firmware to the ACC board's
+       ESP32-S3 with Espressif's esptool. It's separate from the viewer, which
+       only shows the scope. The version and common settings are in
+       ..\Directory.Build.props. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>AccFirmwareFlasher</RootNamespace>
+    <AssemblyName>AccFirmwareFlasher</AssemblyName>
+    <Product>ACC Firmware Flasher</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+    <InternalsVisibleTo Include="AccSpectrumViewer.Tests" />
+  </ItemGroup>
+
+  <!-- esptool and the firmware go beside the exe, so flashing works without
+       installing anything. viewer/esptool is filled by get-esptool.ps1 (and by
+       the release build); it isn't kept in git. -->
+  <ItemGroup>
+    <None Include="..\..\esptool\**\*" Link="esptool\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          ExcludeFromSingleFile="true" />
+    <None Include="..\..\..\firmware\release\*-merged.bin" Link="firmware\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+</Project>

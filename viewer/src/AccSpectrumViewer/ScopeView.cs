@@ -34,6 +34,7 @@ internal sealed class ScopeView : Control
     private readonly Font _titleFont;
     private readonly Font _scaleFont;
     private ColourStretch? _stretch;
+    private double? _traceTop;
     private bool _fallChanged;
     private ReceiverScope? _scope;
     private string? _message = "Waiting for frames...";
@@ -59,7 +60,11 @@ internal sealed class ScopeView : Control
     public bool Show3dss { get; set; }
 
     /// <summary>Works the colours out again from the next trace.</summary>
-    public void ResetColours() => _stretch = null;
+    public void ResetColours()
+    {
+        _stretch = null;
+        _traceTop = null;
+    }
 
     /// <summary>Adds a trace: a waterfall row and a 3DSS line. Call <see cref="Control.Invalidate()"/> after.</summary>
     public void AddTrace(ReceiverScope scope)
@@ -72,7 +77,9 @@ internal sealed class ScopeView : Control
         // the picture changes: a new span or band, or the radio starting to
         // send real frames after being switched on.
         var target = ColourStretch.From(levels);
-        _stretch = _stretch == null || NewPicture(previous, scope) ? target : _stretch.Towards(target, FollowRate);
+        bool fresh = _stretch == null || NewPicture(previous, scope);
+        _stretch = fresh ? target : _stretch!.Towards(target, FollowRate);
+        _traceTop = NextTraceTop(fresh ? null : _traceTop, levels.Max());
 
         Array.Copy(_fall, 0, _fall, Points, Points * (FallRows - 1));
         var lookup = _stretch.Lookup;
@@ -84,6 +91,22 @@ internal sealed class ScopeView : Control
     }
 
     private const double FollowRate = 0.04;
+    private const double TopFallRate = 0.01;
+    private const double Headroom = 0.1;
+
+    /// <summary>
+    /// The level at the top of the trace: up at once to a stronger peak, so a
+    /// signal never goes off the top, and back down slowly, 1% of the gap a
+    /// frame, so the scale doesn't jump about as FT8 signals come and go.
+    /// </summary>
+    internal static double NextTraceTop(double? top, int peak) =>
+        top == null || peak >= top ? peak : top.Value - (top.Value - peak) * TopFallRate;
+
+    /// <summary>The trace's bottom level and its range, with 10% headroom above the top.</summary>
+    internal static (int Low, double Range) TraceScale(int low, double top) =>
+        (low, Math.Max((top - low) * (1 + Headroom), 1));
+
+    private (int Low, double Range) TraceScale() => TraceScale(_stretch!.TraceLow, Math.Max(_traceTop ?? _stretch.High, _stretch.Low + 20));
 
     /// <summary>True when the scope shows something else: valid now and not before, another span, or moved by more than half a span.</summary>
     internal static bool NewPicture(ReceiverScope? before, ReceiverScope now)
@@ -115,7 +138,7 @@ internal sealed class ScopeView : Control
             return;
         }
 
-        int traceHeight = Math.Max(area.Height * 2 / 5, 40);
+        int traceHeight = Math.Max(area.Height * 7 / 10, 40);   // the waterfall gets the other 3/10
         var trace = new Rectangle(area.X, area.Y, area.Width, traceHeight);
         var fall = new Rectangle(area.X, trace.Bottom, area.Width, Math.Max(area.Bottom - trace.Bottom, 1));
         DrawScale(g, trace, grid: true);
@@ -184,8 +207,7 @@ internal sealed class ScopeView : Control
     {
         if (_history.Count == 0 || _stretch == null) return;
         var levels = _history[0];
-        int low = _stretch.TraceLow;
-        double range = Math.Max(_stretch.High - low, 1);
+        var (low, range) = TraceScale();
         var points = new PointF[Points];
         for (int i = 0; i < Points; i++)
         {
@@ -225,8 +247,7 @@ internal sealed class ScopeView : Control
     private void Draw3dss(Graphics g, Rectangle r)
     {
         if (_history.Count == 0 || _stretch == null) return;
-        int low = _stretch.TraceLow;
-        double range = Math.Max(_stretch.High - low, 1);
+        var (low, range) = TraceScale();
         const int step = 2;
         int count = (Points + step - 1) / step;
         var line = new PointF[count];

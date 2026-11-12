@@ -1,8 +1,10 @@
-// ACC Spectrum Viewer: shows the scope of a Yaesu FTdx101 from its ACC socket.
+// ACC Firmware Flasher: writes the ACC board's firmware to its ESP32-S3.
 // Copyright (C) 2026 Colin Campbell MM5AGM
 // SPDX-License-Identifier: GPL-3.0-only (see LICENSE in the top folder)
 
-namespace AccSpectrumViewer;
+using System.Reflection;
+
+namespace AccFirmwareFlasher;
 
 /// <summary>
 /// Writes the firmware to the ESP32-S3 with esptool. Only the board's own two
@@ -10,11 +12,10 @@ namespace AccSpectrumViewer;
 /// </summary>
 internal sealed class FlashForm : Form
 {
-    private readonly BoardConnection _board;
     private readonly ComboBox _ports = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _firmware = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly Button _flash = new() { Text = "&Flash", AutoSize = true };
-    private readonly Button _close = new() { Text = "Close", AutoSize = true, DialogResult = DialogResult.Cancel };
+    private readonly Button _close = new() { Text = "Close", AutoSize = true };
     private readonly ProgressBar _progress = new() { Dock = DockStyle.Fill, Maximum = 1000 };
     private readonly TextBox _log = new()
     {
@@ -29,15 +30,14 @@ internal sealed class FlashForm : Form
     };
     private CancellationTokenSource? _running;
 
-    public FlashForm(BoardConnection board)
+    public FlashForm()
     {
-        _board = board;
-        Text = "Flash firmware";
+        Text = "ACC Firmware Flasher " + Version;
         // Sized from the font, so it fits with Windows' text made larger.
         int em = Font.Height;
         ClientSize = new Size(em * 46, em * 30);
         MinimumSize = new Size(em * 34, em * 24);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         CancelButton = _close;
 
         var intro = new Label
@@ -46,7 +46,7 @@ internal sealed class FlashForm : Form
             AutoSize = true,
             Margin = new Padding(3, 3, 3, 10),
             Text = "This writes the firmware to the board's ESP32-S3 with Espressif's esptool. " +
-                   "Do it with the radio's DC lead out, as the setup guide says. " +
+                   "Do it with the radio's DC lead out. " +
                    "Plug the board's socket marked COM into this PC; its socket marked USB works too. " +
                    "Only the board's own ports are listed (USB IDs 1A86:55D3 and 303A:1001), never a radio's.",
         };
@@ -56,6 +56,7 @@ internal sealed class FlashForm : Form
         var browse = new Button { Text = "&Browse...", AutoSize = true };
         browse.Click += (_, _) => Browse();
         _flash.Click += async (_, _) => await FlashAsync();
+        _close.Click += (_, _) => Close();   // while flashing, closing means Stop
 
         var grid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 6, Padding = new Padding(10) };
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -92,8 +93,9 @@ internal sealed class FlashForm : Form
         FillPorts();
         FillFirmware(null);
         if (!File.Exists(EspTool.ExePath))
-            Log($"esptool isn't where it should be ({EspTool.ExePath}). Download the viewer's release zip, " +
-                "which has it, or run viewer\\get-esptool.ps1 if you built the viewer yourself.");
+            Log($"esptool isn't where it should be ({EspTool.ExePath}). Download the release zip, " +
+                "which has it, or run viewer\\get-esptool.ps1 if you built it yourself.");
+        WarnIfViewerRunning();
     }
 
     private void FillPorts()
@@ -147,6 +149,7 @@ internal sealed class FlashForm : Form
             Log($"{port.Name} isn't there any more. Press Refresh.");
             return;
         }
+        WarnIfViewerRunning();
         var answer = MessageBox.Show(this,
             $"Write {firmware.Name} to the board on {port.Name}?\n\nThe radio's DC lead should be out.",
             "Flash firmware", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
@@ -155,14 +158,13 @@ internal sealed class FlashForm : Form
         _running = new CancellationTokenSource();
         UpdateButtons();
         _progress.Value = 0;
-        _board.Suspend();
         try
         {
             var args = EspTool.WriteFlashArguments(port.Name, firmware.Path);
             Log("esptool " + string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a)));
             int code = await EspTool.RunAsync(args, line => BeginInvoke(() => OnOutput(line)), _running.Token);
             Log(code == 0
-                ? "Done. The board restarts with the new firmware; the viewer finds it again in a few seconds."
+                ? "Done. The board restarts with the new firmware. Close this window and start ACC Spectrum Viewer."
                 : $"esptool stopped with code {code}. See the lines above. If it can't connect, hold the board's BOOT button, " +
                   "press and let go of RST, let go of BOOT, and try again.");
             if (code == 0) _progress.Value = _progress.Maximum;
@@ -179,10 +181,23 @@ internal sealed class FlashForm : Form
         {
             _running.Dispose();
             _running = null;
-            _board.Resume();
             UpdateButtons();
         }
     }
+
+    /// <summary>
+    /// ACC Spectrum Viewer holds the board's USB socket while it runs, so
+    /// esptool can't open that port. The COM socket is free either way.
+    /// </summary>
+    private void WarnIfViewerRunning()
+    {
+        if (System.Diagnostics.Process.GetProcessesByName("AccSpectrumViewer").Length > 0)
+            Log("ACC Spectrum Viewer is running. It holds the board's USB socket, so close it first, " +
+                "or flash through the socket marked COM.");
+    }
+
+    private static string Version =>
+        typeof(FlashForm).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
 
     private void OnOutput(string line)
     {

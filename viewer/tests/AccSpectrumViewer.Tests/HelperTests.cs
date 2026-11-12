@@ -1,3 +1,5 @@
+using AccFirmwareFlasher;
+
 namespace AccSpectrumViewer.Tests;
 
 public class ColourStretchTests
@@ -160,4 +162,34 @@ public class FormattingTests
     [InlineData(7200, "2 h 0 min")]
     [InlineData(9000, "2 h 30 min")]
     public void Uptime(long seconds, string text) => Assert.Equal(text, MainForm.Uptime(seconds));
+}
+
+public class TraceTopTests
+{
+    [Fact]
+    public void A_stronger_peak_moves_the_top_up_at_once()
+    {
+        Assert.Equal(180, ScopeView.NextTraceTop(150, 180));
+        Assert.Equal(120, ScopeView.NextTraceTop(null, 120));
+    }
+
+    [Fact]
+    public void A_weaker_peak_lets_the_top_down_slowly()
+    {
+        double top = 200;
+        top = ScopeView.NextTraceTop(top, 100);
+        Assert.Equal(199, top, 6);
+        for (int i = 0; i < 25 * 10; i++) top = ScopeView.NextTraceTop(top, 100);   // 10 seconds
+        Assert.InRange(top, 100, 110);
+    }
+
+    [Fact]
+    public void The_strongest_signal_stays_below_the_top_of_the_trace()
+    {
+        var (low, range) = ScopeView.TraceScale(20, 220);
+
+        Assert.Equal(20, low);
+        Assert.True((220 - low) / range < 1);
+        Assert.InRange((220 - low) / range, 0.9, 0.92);
+    }
 }

@@ -1,7 +1,7 @@
 name: Viewer
 
-# Builds and tests ACC Spectrum Viewer, and makes the release zip: the exe,
-# Espressif's esptool and the firmware. A tag viewer-vX.Y.Z also puts the zip
+# Builds and tests ACC Spectrum Viewer and ACC Firmware Flasher, and makes the
+# release zip: the two exes, Espressif's esptool and the firmware. A tag viewer-vX.Y.Z also puts the zip
 # on a GitHub release of that name.
 
 on:
@@ -47,12 +47,17 @@ jobs:
       - name: Publish
         shell: pwsh
         run: |
-          dotnet publish viewer/src/AccSpectrumViewer -c Release -r win-x64 --self-contained `
-            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
-            -p:DebugType=none -p:GenerateDocumentationFile=false -o viewer/out/AccSpectrumViewer
+          # The viewer and the flasher go into one folder: two exes, with
+          # esptool and the firmware beside them for the flasher.
+          foreach ($project in 'AccSpectrumViewer', 'AccFirmwareFlasher') {
+            dotnet publish viewer/src/$project -c Release -r win-x64 --self-contained `
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+              -p:DebugType=none -p:GenerateDocumentationFile=false -o viewer/out/AccSpectrumViewer
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
           Copy-Item LICENSE viewer/out/AccSpectrumViewer/LICENSE.txt
           Copy-Item viewer/README.md viewer/out/AccSpectrumViewer/README.md
-          $version = ([xml](Get-Content viewer/src/AccSpectrumViewer/AccSpectrumViewer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $version = ([xml](Get-Content viewer/src/Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
           "VERSION=$version" >> $env:GITHUB_ENV
 
       - uses: actions/upload-artifact@v4

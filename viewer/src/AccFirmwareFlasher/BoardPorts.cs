@@ -1,11 +1,11 @@
-// ACC Spectrum Viewer: shows the scope of a Yaesu FTdx101 from its ACC socket.
+// ACC Firmware Flasher: writes the ACC board's firmware to its ESP32-S3.
 // Copyright (C) 2026 Colin Campbell MM5AGM
 // SPDX-License-Identifier: GPL-3.0-only (see LICENSE in the top folder)
 
 using System.IO.Ports;
 using Microsoft.Win32;
 
-namespace AccSpectrumViewer;
+namespace AccFirmwareFlasher;
 
 /// <summary>A serial port that belongs to the board.</summary>
 internal sealed record BoardPort(string Name, int VendorId, int ProductId, string Description)
