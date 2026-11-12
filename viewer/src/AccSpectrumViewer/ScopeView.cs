@@ -59,13 +59,6 @@ internal sealed class ScopeView : Control
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public bool Show3dss { get; set; }
 
-    /// <summary>Works the colours out again from the next trace.</summary>
-    public void ResetColours()
-    {
-        _stretch = null;
-        _traceTop = null;
-    }
-
     /// <summary>Adds a trace: a waterfall row and a 3DSS line. Call <see cref="Control.Invalidate()"/> after.</summary>
     public void AddTrace(ReceiverScope scope)
     {

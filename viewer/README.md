@@ -18,12 +18,17 @@ everything it knows about the board and the frames comes from there.
   out or the board restarts, it looks again. The title bar says which port it's on.
 - **Shows the scope.** For each receiver it draws a trace above a smaller waterfall,
   with the frequency scale worked out from the VFO and span in the radio's own
-  frames, and a dashed red line on the VFO. The span is whatever the radio is
-  set to. The trace's scale follows the signals: it goes up at once for a
-  stronger one, so nothing goes off the top, and comes back down slowly.
+  frames, and a dashed red line on the VFO.
+  - **The span is set on the radio.** The viewer shows whatever span each
+    receiver is set to, and follows when you change it. Main and Sub have
+    their own spans, so change the one for the receiver you're looking at.
+    In Cursor mode the VFO line is near the left edge, not in the middle.
+  - The waterfall colours look after themselves: black is the noise floor and
+    white the strongest signal, and they start again at once on a new band or span.
+  - The trace's scale follows the signals: it goes up at once for a stronger
+    one, so nothing goes off the top, and comes back down slowly.
   - Press **D** or **3DSS** for the last 40 traces in perspective, like the radio's 3DSS.
   - Press **Space** or **Pause** to freeze it.
-  - Press **A** or **Colours** to work the waterfall colours out again after a band change.
 - **Checks the wiring.** The board sends a status line every 5 seconds, with how
   many times a second each input changes. The bar along the bottom compares
   them with what a working board shows, and says what to check when one is
