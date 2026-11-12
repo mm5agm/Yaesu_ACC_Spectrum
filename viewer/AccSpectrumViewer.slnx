@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/AccSpectrumViewer/AccSpectrumViewer.csproj" />
+    <Project Path="src/AccFirmwareFlasher/AccFirmwareFlasher.csproj" />
     <Project Path="../library/src/YaesuAccScope/YaesuAccScope.csproj" />
   </Folder>
   <Folder Name="/tests/">

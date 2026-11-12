@@ -15,8 +15,8 @@ already sends its scope over USB, and YWC uses that.
 > [docs/bench-notes.md](docs/bench-notes.md) and
 > [docs/fuse-risk.md](docs/fuse-risk.md), and do it at your own risk.
 > The firmware is on the [firmware-v2.0.1 release](https://github.com/mm5agm/Yaesu_ACC_Spectrum/releases/tag/firmware-v2.0.1),
-> and [ACC Spectrum Viewer](viewer/README.md) flashes it, shows the scope and
-> checks the wiring, without PlatformIO.
+> and the [ACC Spectrum Viewer](viewer/README.md) zip has a flasher for it, without
+> PlatformIO, and the viewer that shows the scope and checks the wiring.
 
 Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
 frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
@@ -73,9 +73,9 @@ wire to find its pin, and don't go by the colours here.**
 
 [ACC Spectrum Viewer](viewer/README.md) is a Windows program for the board. It
 finds the board, shows the Main and Sub scope, checks each wire from the
-board's own edge counts, and flashes the firmware with Espressif's esptool,
-offering only the board's own two ports, never a radio's. It uses the library,
-and nothing needs installing.
+board's own edge counts. It uses the library, and nothing needs installing.
+Beside it in the same zip, ACC Firmware Flasher writes the firmware with
+Espressif's esptool, offering only the board's own two ports, never a radio's.
 
 ![ACC Spectrum Viewer: Main on 14,074 kHz and Sub on 7,074 kHz, each a trace above a waterfall, with the wiring check along the bottom, all green.](docs/images/viewer.png)
 
@@ -627,7 +627,7 @@ found.
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
 | `docs/` | The plan, the bench notes and the protocol |
 | `library/` | YaesuAccScope, a .NET library that reads the board's frames, for any program to use. See [library/README.md](library/README.md) |
-| `viewer/` | ACC Spectrum Viewer, the Windows program that shows the scope, checks the wiring and flashes the firmware. See [viewer/README.md](viewer/README.md) |
+| `viewer/` | ACC Spectrum Viewer, the Windows program that shows the scope and checks the wiring, and ACC Firmware Flasher, which flashes the firmware. See [viewer/README.md](viewer/README.md) |
 
 It works, so the firmware, wiring and bench notes stay here, along with the
 library. YWC will use the library to show the ACC spectrum. See
@@ -662,5 +662,5 @@ themselves. See [library/COPYING.LESSER](library/COPYING.LESSER).
 
 The viewer's release zip also carries Espressif's esptool, unchanged, in its
 own folder. esptool is GPL-2.0-or-later, from
-<https://github.com/espressif/esptool>, and the viewer runs it as a separate
-program.
+<https://github.com/espressif/esptool>, and ACC Firmware Flasher runs it as a
+separate program.

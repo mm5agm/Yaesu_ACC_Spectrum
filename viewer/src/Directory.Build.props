@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- Shared by ACC Spectrum Viewer and ACC Firmware Flasher, which are
+       released together in one zip with the same version. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Authors>Colin Campbell MM5AGM</Authors>
+    <Copyright>Copyright (C) 2026 Colin Campbell MM5AGM</Copyright>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+  </PropertyGroup>
+
+</Project>

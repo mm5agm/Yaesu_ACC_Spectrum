@@ -46,8 +46,6 @@ internal sealed class MainForm : Form
 
         var colours = MakeButton("&Colours", "Work the waterfall colours out again from what's on screen now (A)");
         colours.Click += (_, _) => ResetColours();
-        var flash = MakeButton("&Flash firmware...", "Write the firmware to the ESP32-S3");
-        flash.Click += (_, _) => Flash();
         var project = MakeButton("Project page", ProjectUrl);
         project.Click += (_, _) => OpenUrl(ProjectUrl);
         var tips = _tips;
@@ -67,7 +65,7 @@ internal sealed class MainForm : Form
             WrapContents = false,
             FlowDirection = FlowDirection.LeftToRight,
         };
-        buttons.Controls.AddRange(new Control[] { _pause, _dss, colours, flash, project });
+        buttons.Controls.AddRange(new Control[] { _pause, _dss, colours, project });
         buttons.Dock = DockStyle.None;
         buttons.Anchor = AnchorStyles.Left;
         var top = new TableLayoutPanel
@@ -216,12 +214,6 @@ internal sealed class MainForm : Form
         _sub.ResetColours();
     }
 
-    private void Flash()
-    {
-        using var form = new FlashForm(_board);
-        form.ShowDialog(this);
-    }
-
     private void OnUi(Action action)
     {
         if (IsDisposed || !IsHandleCreated) return;
@@ -264,6 +256,7 @@ internal sealed class MainForm : Form
         {
             Text = text,
             AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,   // fit the text, like the Pause and 3DSS toggles
             FlatStyle = FlatStyle.Flat,
             ForeColor = Color.White,
             BackColor = Color.FromArgb(0x30, 0x30, 0x30),

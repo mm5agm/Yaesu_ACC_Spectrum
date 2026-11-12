@@ -1,39 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- A Windows program that shows the radio's scope from the ACC board, checks
-       the wiring and flashes the firmware. It uses the YaesuAccScope library, so
-       it's also the library's first real user. -->
+  <!-- A Windows program that shows the radio's scope from the ACC board and
+       checks the wiring. It uses the YaesuAccScope library, so it's also the
+       library's first real user. The version and common settings are in
+       ..\Directory.Build.props. -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AccSpectrumViewer</RootNamespace>
     <AssemblyName>AccSpectrumViewer</AssemblyName>
-    <Version>0.1.0</Version>
     <Product>ACC Spectrum Viewer</Product>
-    <Authors>Colin Campbell MM5AGM</Authors>
-    <Copyright>Copyright (C) 2026 Colin Campbell MM5AGM</Copyright>
-    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <ApplicationVisualStyles>true</ApplicationVisualStyles>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\library\src\YaesuAccScope\YaesuAccScope.csproj" />
     <InternalsVisibleTo Include="AccSpectrumViewer.Tests" />
-  </ItemGroup>
-
-  <!-- esptool and the firmware go beside the exe, so Flash firmware works
-       without installing anything. viewer/esptool is filled by
-       get-esptool.ps1 (and by the release build); it isn't kept in git. -->
-  <ItemGroup>
-    <None Include="..\..\esptool\**\*" Link="esptool\%(RecursiveDir)%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
-          ExcludeFromSingleFile="true" />
-    <None Include="..\..\..\firmware\release\*-merged.bin" Link="firmware\%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
-          ExcludeFromSingleFile="true" />
   </ItemGroup>
 
 </Project>
