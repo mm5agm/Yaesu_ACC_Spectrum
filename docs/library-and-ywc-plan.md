@@ -33,6 +33,8 @@ Flashing follows the bench rules: the radio off and its DC lead out.
 
 **First version on 2026-11-11**, in [library/](../library/README.md): packets, frames, status texts, the serial reader and the board finder, with 48 tests on my captures. Tried on the board: it found COM6 from the status text and read version 2.0.1. Still to do: the network reader (with YWC's re-broadcast) and nuget.org.
 
+**ScopeRefiner on 2026-11-12:** a refined trace for eyes next to the raw rows. Each point is averaged over the last few frames (weight 0.3 by default), moved with the VFO in Center, and started again on a new span or a jump. On 20m FT8 at 20 kHz it took the strongest signals over the floor's roughness from 8.8 to 21.5 on Main, level with my RSP1B (22.9) and RSP1 (21.7) on the IF outputs. The raw rows stay in `Levels` for anything that measures. YWC uses it, through a 0.2.0-dev1 package checked into YWC's `local-packages/` until the library is on nuget.org. IWC and YWC share the same method for the IC-7300's CI-V scope (core `SpectrumRefiner`), written up in Radio_Web_Control_Core's `docs/design/spectrum-refine.md`.
+
 A .NET Standard 2.0 library, so it works in .NET 8 programs and in older .NET
 Framework ones, which many logging programs still are. In `library/`, with its
 own LGPL-3 licence files (the LGPL text and the GPL text it builds on).
@@ -68,6 +70,8 @@ tidied up.
 ### 4. YWC
 
 A branch off develop. No version bump until I say go.
+
+**Built on 2026-11-12**, on YWC's `feature/acc-scope`: the source, placement from the frame, the span buttons over CAT, the refined trace with a Refine slider per panel (and a REFINE list on the Radio panel, its pop-out and RTTY Contest), and the USER_MANUAL section. Checked on receive on my FTdx101MP. Still to do: the re-broadcast, the setup guide page, the side-by-side control check against an RSP1B panel, and a check in Docker.
 
 - **Source:** two new device choices for the SDR panels when the radio is an
   FTdx101MP or D: "ACC scope, Main" and "ACC scope, Sub". The defaults are panel
