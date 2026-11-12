@@ -64,10 +64,15 @@ internal sealed class ScopeView : Control
     /// <summary>Adds a trace: a waterfall row and a 3DSS line. Call <see cref="Control.Invalidate()"/> after.</summary>
     public void AddTrace(ReceiverScope scope)
     {
+        var previous = _scope;
         _scope = scope;
         _message = scope.IsValid ? null : "No frequency in the frame. Is the SPI mode right?";
         var levels = scope.Levels;
-        _stretch ??= ColourStretch.From(levels);
+        // The colours follow the levels slowly, and start again at once when
+        // the picture changes: a new span or band, or the radio starting to
+        // send real frames after being switched on.
+        var target = ColourStretch.From(levels);
+        _stretch = _stretch == null || NewPicture(previous, scope) ? target : _stretch.Towards(target, FollowRate);
 
         Array.Copy(_fall, 0, _fall, Points, Points * (FallRows - 1));
         var lookup = _stretch.Lookup;
@@ -76,6 +81,16 @@ internal sealed class ScopeView : Control
 
         _history.Insert(0, levels);
         if (_history.Count > Depth) _history.RemoveAt(_history.Count - 1);
+    }
+
+    private const double FollowRate = 0.04;
+
+    /// <summary>True when the scope shows something else: valid now and not before, another span, or moved by more than half a span.</summary>
+    internal static bool NewPicture(ReceiverScope? before, ReceiverScope now)
+    {
+        if (before == null || before.IsValid != now.IsValid) return true;
+        if (!now.IsValid) return false;
+        return before.SpanHz != now.SpanHz || Math.Abs(before.CentreHz - now.CentreHz) > now.SpanHz / 2;
     }
 
     /// <summary>Shows a message in place of the tuning, such as when the board is lost.</summary>
