@@ -8,7 +8,7 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>YaesuAccScope</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <PackageId>YaesuAccScope</PackageId>
     <Authors>Colin Campbell MM5AGM</Authors>
     <Description>Reads a Yaesu FTdx101's own scope data from its ACC socket, through an ESP32-S3 running the Yaesu_ACC_Spectrum firmware.</Description>

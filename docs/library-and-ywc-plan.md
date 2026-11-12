@@ -31,9 +31,9 @@ Flashing follows the bench rules: the radio off and its DC lead out.
 
 ### 2. The library: `YaesuAccScope`
 
-**First version on 2026-11-11**, in [library/](../library/README.md): packets, frames, status texts, the serial reader and the board finder, with 48 tests on my captures. Tried on the board: it found COM6 from the status text and read version 2.0.1. Still to do: the network reader (with YWC's re-broadcast) and nuget.org.
+**First version on 2026-11-11**, in [library/](../library/README.md): packets, frames, status texts, the serial reader and the board finder, with 48 tests on my captures. Tried on the board: it found COM6 from the status text and read version 2.0.1. Still to do: the network reader (with YWC's re-broadcast).
 
-**ScopeRefiner on 2026-11-12:** a refined trace for eyes next to the raw rows. Each point is averaged over the last few frames (weight 0.3 by default), moved with the VFO in Center, and started again on a new span or a jump. On 20m FT8 at 20 kHz it took the strongest signals over the floor's roughness from 8.8 to 21.5 on Main, level with my RSP1B (22.9) and RSP1 (21.7) on the IF outputs. The raw rows stay in `Levels` for anything that measures. YWC uses it, through a 0.2.0-dev1 package checked into YWC's `local-packages/` until the library is on nuget.org. IWC and YWC share the same method for the IC-7300's CI-V scope (core `SpectrumRefiner`), written up in Radio_Web_Control_Core's `docs/design/spectrum-refine.md`.
+**ScopeRefiner on 2026-11-12:** a refined trace for eyes next to the raw rows. Each point is averaged over the last few frames (weight 0.3 by default), moved with the VFO in Center, and started again on a new span or a jump. On 20m FT8 at 20 kHz it took the strongest signals over the floor's roughness from 8.8 to 21.5 on Main, level with my RSP1B (22.9) and RSP1 (21.7) on the IF outputs. The raw rows stay in `Levels` for anything that measures. YWC uses it, through a 0.2.0-dev1 package checked into YWC's `local-packages/` until the library was on nuget.org. IWC and YWC share the same method for the IC-7300's CI-V scope (core `SpectrumRefiner`), written up in Radio_Web_Control_Core's `docs/design/spectrum-refine.md`.
 
 A .NET Standard 2.0 library, so it works in .NET 8 programs and in older .NET
 Framework ones, which many logging programs still are. In `library/`, with its
@@ -53,8 +53,10 @@ own LGPL-3 licence files (the LGPL text and the GPL text it builds on).
 - **Network reader** (with step 4): the same frames from YWC's re-broadcast.
 - **Tests** on my own captures in captures/step5: every span, Center, Cursor
   and Fix, Sub, the audio scope.
-- Published on nuget.org. That needs a nuget.org account and an API key,
-  which are mine to create.
+- Published on nuget.org: 0.2.0 on 2026-11-12. A `library-vX.Y.Z` tag
+  publishes that version from `library.yml`, through Trusted Publishing on my
+  nuget.org account, so no API key is stored. The tag must match `<Version>`
+  in the csproj.
 
 Later, only if someone asks: a plain C DLL from the same code (NativeAOT), for
 C, C++, Delphi or Python, with no .NET needed.
