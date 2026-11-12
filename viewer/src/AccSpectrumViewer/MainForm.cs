@@ -11,7 +11,7 @@ namespace AccSpectrumViewer;
 
 /// <summary>
 /// The main window: Main and Sub scopes, the wiring check, and buttons.
-/// Space pauses, D switches to 3DSS, A works the colours out again.
+/// Space pauses, D switches to 3DSS.
 /// </summary>
 internal sealed class MainForm : Form
 {
@@ -44,8 +44,6 @@ internal sealed class MainForm : Form
         KeyPreview = true;
         StartPosition = FormStartPosition.CenterScreen;
 
-        var colours = MakeButton("&Colours", "Work the waterfall colours out again from what's on screen now (A)");
-        colours.Click += (_, _) => ResetColours();
         var project = MakeButton("Project page", ProjectUrl);
         project.Click += (_, _) => OpenUrl(ProjectUrl);
         var tips = _tips;
@@ -65,7 +63,7 @@ internal sealed class MainForm : Form
             WrapContents = false,
             FlowDirection = FlowDirection.LeftToRight,
         };
-        buttons.Controls.AddRange(new Control[] { _pause, _dss, colours, project });
+        buttons.Controls.AddRange(new Control[] { _pause, _dss, project });
         buttons.Dock = DockStyle.None;
         buttons.Anchor = AnchorStyles.Left;
         var top = new TableLayoutPanel
@@ -136,9 +134,6 @@ internal sealed class MainForm : Form
             case Keys.D:
                 _dss.Checked = !_dss.Checked;
                 return true;
-            case Keys.A:
-                ResetColours();
-                return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
@@ -207,12 +202,6 @@ internal sealed class MainForm : Form
 
     internal static string Uptime(long seconds) =>
         seconds < 120 ? $"{seconds} s" : seconds < 7200 ? $"{seconds / 60} min" : $"{seconds / 3600} h {seconds % 3600 / 60} min";
-
-    private void ResetColours()
-    {
-        _main.ResetColours();
-        _sub.ResetColours();
-    }
 
     private void OnUi(Action action)
     {
