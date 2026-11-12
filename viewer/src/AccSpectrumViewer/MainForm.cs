@@ -256,6 +256,7 @@ internal sealed class MainForm : Form
         {
             Text = text,
             AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,   // fit the text, like the Pause and 3DSS toggles
             FlatStyle = FlatStyle.Flat,
             ForeColor = Color.White,
             BackColor = Color.FromArgb(0x30, 0x30, 0x30),
