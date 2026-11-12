@@ -10,9 +10,13 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
-> **Work in progress.** There's no setup guide or firmware release yet. If you
-> wire your own radio, follow [docs/bench-notes.md](docs/bench-notes.md) and
+> **Work in progress.** There's no step-by-step setup guide yet. If you
+> wire your own radio, follow [Wiring](#wiring), [Safe first connection](#safe-first-connection),
+> [docs/bench-notes.md](docs/bench-notes.md) and
 > [docs/fuse-risk.md](docs/fuse-risk.md), and do it at your own risk.
+> The firmware is on the [firmware-v2.0.1 release](https://github.com/mm5agm/Yaesu_ACC_Spectrum/releases/tag/firmware-v2.0.1),
+> and [ACC Spectrum Viewer](viewer/README.md) flashes it, shows the scope and
+> checks the wiring, without PlatformIO.
 
 Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
 frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
@@ -64,6 +68,20 @@ Radio ACC socket <- cable male | cable female <- IC-7300MK2 plug -> wires -> bre
 came from Icom with the plug already soldered on. They aren't the colours you get
 by cutting the Amazon extension cable in two. If you cut that cable, meter every
 wire to find its pin, and don't go by the colours here.**
+
+## ACC Spectrum Viewer
+
+[ACC Spectrum Viewer](viewer/README.md) is a Windows program for the board. It
+finds the board, shows the Main and Sub scope, checks each wire from the
+board's own edge counts, and flashes the firmware with Espressif's esptool,
+offering only the board's own two ports, never a radio's. It uses the library,
+and nothing needs installing.
+
+![ACC Spectrum Viewer: Main on 14,074 kHz and Sub on 7,074 kHz, each a trace above a waterfall, with the wiring check along the bottom, all green.](docs/images/viewer.png)
+
+The same in its 3DSS view:
+
+![ACC Spectrum Viewer in 3DSS: the last 40 traces of each receiver in perspective.](docs/images/viewer-3dss.png)
 
 ## Use at your own risk
 
@@ -609,6 +627,7 @@ found.
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
 | `docs/` | The plan, the bench notes and the protocol |
 | `library/` | YaesuAccScope, a .NET library that reads the board's frames, for any program to use. See [library/README.md](library/README.md) |
+| `viewer/` | ACC Spectrum Viewer, the Windows program that shows the scope, checks the wiring and flashes the firmware. See [viewer/README.md](viewer/README.md) |
 
 It works, so the firmware, wiring and bench notes stay here, along with the
 library. YWC will use the library to show the ACC spectrum. See
@@ -640,3 +659,8 @@ and 16 also cover the lack of warranty and liability.
 The library in `library/` has its own licence, LGPL-3.0, so other programs can
 read the ACC data without copying code from here, and without having to be GPL
 themselves. See [library/COPYING.LESSER](library/COPYING.LESSER).
+
+The viewer's release zip also carries Espressif's esptool, unchanged, in its
+own folder. esptool is GPL-2.0-or-later, from
+<https://github.com/espressif/esptool>, and the viewer runs it as a separate
+program.

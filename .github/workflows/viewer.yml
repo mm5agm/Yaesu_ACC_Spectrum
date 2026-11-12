@@ -1,0 +1,89 @@
+name: Viewer
+
+# Builds and tests ACC Spectrum Viewer, and makes the release zip: the exe,
+# Espressif's esptool and the firmware. A tag viewer-vX.Y.Z also puts the zip
+# on a GitHub release of that name.
+
+on:
+  push:
+    branches: [main]
+    tags: ['viewer-v*']
+    paths: ['viewer/**', 'library/**', '.github/workflows/viewer.yml']
+  pull_request:
+    paths: ['viewer/**', 'library/**', '.github/workflows/viewer.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ESPTOOL_VERSION: v5.6.0
+  FIRMWARE_TAG: firmware-v2.0.1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test
+        run: dotnet test viewer/AccSpectrumViewer.slnx -c Release
+
+      - name: Get esptool
+        shell: pwsh
+        run: ./viewer/get-esptool.ps1 -Version $env:ESPTOOL_VERSION
+
+      - name: Get the firmware
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force firmware/release | Out-Null
+          gh release download $env:FIRMWARE_TAG --repo $env:GITHUB_REPOSITORY --pattern '*-merged.bin' --dir firmware/release --clobber
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          dotnet publish viewer/src/AccSpectrumViewer -c Release -r win-x64 --self-contained `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=none -p:GenerateDocumentationFile=false -o viewer/out/AccSpectrumViewer
+          Copy-Item LICENSE viewer/out/AccSpectrumViewer/LICENSE.txt
+          Copy-Item viewer/README.md viewer/out/AccSpectrumViewer/README.md
+          $version = ([xml](Get-Content viewer/src/AccSpectrumViewer/AccSpectrumViewer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AccSpectrumViewer-${{ env.VERSION }}-win-x64
+          path: viewer/out/AccSpectrumViewer/
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/viewer-v')
+    needs: build
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dl
+      - name: Zip and attach to the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^viewer-v', ''
+          $folder = Get-ChildItem dl -Directory | Select-Object -First 1
+          $zip = "AccSpectrumViewer-$version-win-x64.zip"
+          Compress-Archive -Path "$($folder.FullName)/*" -DestinationPath $zip
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $zip --title "ACC Spectrum Viewer $version" --notes "See viewer/README.md for what it does and how to flash safely." --prerelease
+          } else {
+            gh release upload $tag $zip --clobber
+          }
