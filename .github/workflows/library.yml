@@ -3,7 +3,10 @@ name: Library
 on:
   push:
     branches: [main]
-    paths: ['library/**', 'captures/**', '.github/workflows/library.yml']
+    # A tag like library-v0.2.0 publishes that version to nuget.org (the
+    # publish job below). No paths filter on push, so a tag, which changes no
+    # files, can't be filtered out.
+    tags: ['library-v*']
   pull_request:
     paths: ['library/**', 'captures/**', '.github/workflows/library.yml']
 
