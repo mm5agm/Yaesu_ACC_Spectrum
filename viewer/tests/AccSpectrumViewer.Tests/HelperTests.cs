@@ -48,6 +48,33 @@ public class ColourStretchTests
     }
 
     [Fact]
+    public void Following_moves_part_of_the_way_each_frame()
+    {
+        // Switched on: flat, low levels first, then real noise and signals.
+        var startup = ColourStretch.From(Enumerable.Repeat((byte)5, 850).ToArray());
+        var real = ColourStretch.From(Enumerable.Repeat((byte)60, 800).Concat(Enumerable.Repeat((byte)160, 50)).ToArray());
+
+        var s = startup.Towards(real, 0.04);
+        Assert.InRange(s.Low, 6, 7);
+
+        for (int i = 0; i < 125; i++) s = s.Towards(real, 0.04);   // 5 seconds at 25 a second
+        Assert.InRange(s.Low, 58, 60);
+        Assert.InRange(s.High, 156, 160);
+        Assert.True(s.Low < s.High);
+    }
+
+    [Fact]
+    public void Following_the_same_levels_stays_put()
+    {
+        var a = ColourStretch.From(Enumerable.Range(0, 850).Select(i => (byte)(40 + i % 60)).ToArray());
+        var b = a.Towards(a, 0.02);
+
+        Assert.Equal(a.Low, b.Low);
+        Assert.Equal(a.High, b.High);
+        Assert.Equal(a.Lookup, b.Lookup);
+    }
+
+    [Fact]
     public void The_waterfall_runs_black_to_white()
     {
         Assert.Equal(unchecked((int)0xFF000000), Palette.Waterfall[0]);

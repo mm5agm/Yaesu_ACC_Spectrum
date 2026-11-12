@@ -62,11 +62,18 @@ internal static class Palette
 /// </summary>
 internal sealed class ColourStretch
 {
-    private ColourStretch(int low, int high, int traceLow)
+    private readonly double _low, _high, _traceLow;
+
+    private ColourStretch(double low, double high, double traceLow)
     {
-        Low = low;
-        High = high;
-        TraceLow = traceLow;
+        _low = low;
+        _high = high;
+        _traceLow = traceLow;
+        Low = (int)Math.Round(low);
+        High = Math.Max((int)Math.Round(high), Low + 1);
+        TraceLow = Math.Min((int)Math.Round(traceLow), Low);
+        low = Low;
+        high = High;
         Lookup = new byte[256];
         for (int v = 0; v < 256; v++)
             Lookup[v] = v <= low ? (byte)0 : v >= high ? (byte)255 : (byte)Math.Round((v - low) * 255.0 / (high - low));
@@ -95,4 +102,14 @@ internal sealed class ColourStretch
         if (high <= low) low = high - 1;
         return new ColourStretch(low, high, Math.Min((int)sorted[sorted.Length / 20], low));
     }
+
+    /// <summary>
+    /// A step of the way from this stretch towards <paramref name="target"/>:
+    /// <paramref name="rate"/> 0.04 a frame, at 25 frames a second, gets 95%
+    /// of the way in about 3 seconds, so the colours settle without flickering.
+    /// </summary>
+    public ColourStretch Towards(ColourStretch target, double rate) => new(
+        _low + (target._low - _low) * rate,
+        _high + (target._high - _high) * rate,
+        _traceLow + (target._traceLow - _traceLow) * rate);
 }
