@@ -39,6 +39,28 @@ reader.Failed += (_, ex) => Console.WriteLine("Lost the board: " + ex.Message);
 reader.Start();
 ```
 
+### Raw or refined
+
+`Levels` is the raw row, exactly as the radio sent it. Each row is a separate
+snapshot, so its noise floor is rough. For a trace a person looks at, use a
+`ScopeRefiner` for each receiver. It averages each point over the last few
+rows, follows the trace when the VFO moves, and starts again on a new span:
+
+```csharp
+var mainRefiner = new ScopeRefiner();           // one per receiver
+
+reader.FrameReceived += (_, e) =>
+{
+    float[] trace = mainRefiner.Add(e.Frame.Main);   // 850 points, same scale as Levels
+    // draw trace...
+};
+```
+
+Measured on 20m FT8 at a 20 kHz span, the refined trace's floor is about 2.4
+times smoother than the raw rows, about level with an SDRplay RSP on the radio's
+IF output. It still comes 25 times a second. Use `Levels` for anything that
+measures.
+
 The events come on the reader's own thread. Hand the work to your UI thread if
 you need to, and don't block: the frames come every 40 ms.
 
@@ -64,6 +86,7 @@ you need to, and don't block: the frames come every 40 ms.
 | `AccPacketReader` | Splits the board's byte stream into packets, for when you read the bytes yourself or from a file. Finds its place again after bad bytes, and counts lost packets from the sequence numbers |
 | `AccFrame` | One frame decoded: `Main` and `Sub` (`ReceiverScope`), `MainAudio` and `SubAudio` (`AudioScope`), the Band button, and the raw bytes |
 | `ReceiverScope` | The 850 levels the right way up, the VFO, the span, Center/Cursor/Fix, the centre and edges in Hz, the frequency of each point, 3DSS, and the passband marker |
+| `ScopeRefiner` | Turns one receiver's raw rows into a refined trace for eyes: each point averaged over the last few rows, moved with the VFO in Center, and started again on a new span |
 | `AudioScope` | The AF-FFT and the oscilloscope, and for Main the oscilloscope time and both attenuators |
 | `AccStatus` | The board's status text: firmware version, SPI mode, counts, and edges a second on each input for checking the wiring |
 

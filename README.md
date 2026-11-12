@@ -23,8 +23,11 @@ frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
 VFOs, the span, the placement and the audio scope are all worked out (step 5 of
 the plan), and `tools/live_view.py` draws them. The first version of the
 library is in [library/](library/README.md), for other programs to use, and the
-frame layout is written down in [docs/protocol.md](docs/protocol.md). YWC is
-next: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
+frame layout is written down in [docs/protocol.md](docs/protocol.md). The
+library's `ScopeRefiner` averages the last few frames into a refined trace, so
+the floor settles and weak signals stand out about as clearly as on an SDR
+on the IF output. YWC shows the ACC scope in its spectrum panels on a branch
+that is not released yet: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
 The level checks are in [Oscilloscope traces](#oscilloscope-traces).
 The full plan is in [docs/plan.md](docs/plan.md).
 
@@ -590,6 +593,11 @@ same moment, with the same centre and span. That shows what the ACC route gives
 and what it loses compared with an SDR on the IF, for anyone choosing between
 them. It's receive-only, like everything else here.
 
+A first figure, on 20m FT8 at a 20 kHz span on 2026-11-12: how far the
+strongest signals stand over the roughness of the noise floor. The raw ACC rows
+gave 8.8 on Main. With the library's `ScopeRefiner` that rose to 21.5. The
+RSP1B gave 22.9 and the RSP1 gave 21.7, as YWC draws them.
+
 The method and the results table are in step 7 of [docs/plan.md](docs/plan.md).
 The pictures go in [docs/images/compare/](docs/images/compare/).
 
@@ -630,7 +638,7 @@ found.
 | `viewer/` | ACC Spectrum Viewer, the Windows program that shows the scope and checks the wiring, and ACC Firmware Flasher, which flashes the firmware. See [viewer/README.md](viewer/README.md) |
 
 It works, so the firmware, wiring and bench notes stay here, along with the
-library. YWC will use the library to show the ACC spectrum. See
+library. YWC uses the library to show the ACC spectrum, on a branch that is not released yet. See
 [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
 
 ## Rules
