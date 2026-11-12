@@ -56,6 +56,16 @@ everything it knows about the board and the frames comes from there.
 - If esptool can't connect, put the board into download mode by hand. Hold
   **BOOT**, press and let go of **RST**, let go of BOOT, then press Flash again.
 
+### What a good flash looks like
+
+It takes about 5 seconds. The progress bar fills, and the log counts up to
+100%. Then it says **Hash of data verified**, which means the firmware was read
+back and matches. After that come **Hard resetting via RTS pin** and **Done**.
+The board restarts with the new firmware. Close the window, and the viewer
+finds the board again on its USB socket.
+
+![The Flash firmware window after a good flash: the progress bar full, the log counting up to 100%, then "Hash of data verified", "Hard resetting via RTS pin" and "Done".](../docs/images/viewer-flash-done.png)
+
 ## Running it
 
 Download `AccSpectrumViewer-x.y.z-win-x64.zip` from the
