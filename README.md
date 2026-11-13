@@ -10,26 +10,26 @@ same data on the same socket ([other people's projects](#credits-and-background)
 so the same board and code should suit them too. The FT-710 doesn't need it: it
 already sends its scope over USB, and YWC uses that.
 
-> **Work in progress.** There's no step-by-step setup guide yet. If you
-> wire your own radio, follow [Wiring](#wiring), [Safe first connection](#safe-first-connection),
-> [docs/bench-notes.md](docs/bench-notes.md) and
-> [docs/fuse-risk.md](docs/fuse-risk.md), and do it at your own risk.
-> The firmware is on the [firmware-v2.0.1 release](https://github.com/mm5agm/Yaesu_ACC_Spectrum/releases/tag/firmware-v2.0.1),
-> and the [ACC Spectrum Viewer](viewer/README.md) zip has a flasher for it, without
-> PlatformIO, and the viewer that shows the scope and checks the wiring.
+> **To build one, follow the [setup guide](docs/setup-guide.md),** step by step
+> from the parts to the scope on your PC. Download the
+> [ACC Spectrum Viewer](viewer/README.md) zip from the
+> [releases page](https://github.com/mm5agm/Yaesu_ACC_Spectrum/releases). It has
+> the firmware and a flasher for it, without PlatformIO, and the viewer that shows
+> the scope and checks the wiring. I've only tried it on my FTdx101MP. If you
+> have an FTDX101D or FTDX10, I'd like to hear how it goes. It's all at your own
+> risk; read [docs/fuse-risk.md](docs/fuse-risk.md) first.
 
-Status: **the frame is decoded.** My own firmware on the ESP32-S3 reads all 25
-frames a second from the FTdx101MP's ACC socket. The Main and Sub spectrum, both
-VFOs, the span, the placement and the audio scope are all worked out (step 5 of
-the plan), and `tools/live_view.py` draws them. The first version of the
-library is in [library/](library/README.md), for other programs to use, and the
-frame layout is written down in [docs/protocol.md](docs/protocol.md). The
-library's `ScopeRefiner` averages the last few frames into a refined trace, so
-the floor settles and weak signals stand out about as clearly as on an SDR
-on the IF output. YWC shows the ACC scope in its spectrum panels on a branch
-that is not released yet: see [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
-The level checks are in [Oscilloscope traces](#oscilloscope-traces).
-The full plan is in [docs/plan.md](docs/plan.md).
+Status: **working on my FTdx101MP.** My own firmware on the ESP32-S3 reads all
+25 frames a second from the ACC socket. The Main and Sub spectrum, both VFOs,
+the span, the placement and the audio scope are all worked out, and the frame
+layout is written down in [docs/protocol.md](docs/protocol.md). The
+[YaesuAccScope library](library/README.md), on nuget.org, reads the board for
+any .NET program. Its `ScopeRefiner` averages the last few frames into a refined
+trace, so the floor settles and weak signals stand out about as clearly as on an
+SDR on the IF output. YWC shows the ACC scope in its spectrum panels from
+[v2.5.5-pre1](https://github.com/mm5agm/Yaesu_Web_Control/releases/tag/v2.5.5-pre1).
+Every line's levels are checked in [Oscilloscope traces](#oscilloscope-traces).
+The plan it followed is in [docs/plan.md](docs/plan.md).
 
 ## On my bench
 
@@ -60,8 +60,9 @@ in perspective:
   is cheap and easy to get, and its native USB is fast enough for the data.
 - **Six 470 ohm resistors**, one in series with each signal wire. See
   [Resistor value and the 2 MHz clock](#resistor-value-and-the-2-mhz-clock).
-- **Two USB data leads** to the PC: one for the socket marked COM (flashing and
-  status), one for the socket marked USB (the frames).
+- **A USB data lead** to the PC, for the socket marked USB. It carries the frames
+  and can flash the board. A second lead in the socket marked COM is optional:
+  it gives the status text and a steadier port for erasing.
 
 ```
 Radio ACC socket <- cable male | cable female <- IC-7300MK2 plug -> wires -> breakout
@@ -673,12 +674,12 @@ found.
 | `firmware/` | My own ESP32-S3 firmware |
 | `tools/` | Capture and analysis scripts |
 | `captures/` | Short frame captures from the radio, with a note of the radio's settings |
-| `docs/` | The plan, the bench notes and the protocol |
+| `docs/` | The setup guide, the plan, the bench notes and the protocol |
 | `library/` | YaesuAccScope, a .NET library that reads the board's frames, for any program to use. See [library/README.md](library/README.md) |
 | `viewer/` | ACC Spectrum Viewer, the Windows program that shows the scope and checks the wiring, and ACC Firmware Flasher, which flashes the firmware. See [viewer/README.md](viewer/README.md) |
 
-It works, so the firmware, wiring and bench notes stay here, along with the
-library. YWC uses the library to show the ACC spectrum, on a branch that is not released yet. See
+The firmware, wiring, bench notes and library all live here. YWC uses the
+library to show the ACC spectrum, from v2.5.5-pre1. See
 [docs/library-and-ywc-plan.md](docs/library-and-ywc-plan.md).
 
 ## Rules
