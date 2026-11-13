@@ -574,11 +574,12 @@ low, 0 to 3.32 V.
 
 ### Still to take
 
-These need two or three probes at once.
+These need two or three probes at once. Pins 11 and 12 aren't probed together:
+the link joins terminals 39 and 38, so both probes would be on the same point and
+show the same trace.
 
 | Trace | Probes: ACC pin (terminal) | Timebase | Command, after `python tools/scope_shot.py` |
 |---|---|---|---|
-| The same burst on 12 and 11, link on | C1: 12 (38), C2: 11 (39) | 100 us/div | `--acc C1=12 C2=11 --note link-burst` |
 | The data starting after power-on | C1: 12 (38), C2: 6 (13) | 500 ms/div | `--acc C1=12 C2=6 --note link-start` |
 | The start of one frame | C1: 6 (13), C2: 5 (10) | 2 us/div | `--acc C1=6 C2=5 --note link-frame-start` |
 | The first bytes of a frame | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note link-first-bytes --samples C1 C2 C3` |
