@@ -216,7 +216,10 @@ stages:
 Three rules apply all the way through:
 
 - **Unplug the radio's DC lead before plugging or unplugging anything.** Switching
-  the radio off on its front panel isn't enough.
+  the radio off on its front panel isn't enough. Switch the power supply off
+  before pulling the DC plug or putting it back. On my FTdx101MP the contacts
+  flash if the plug goes in with the supply on. The lead may hold a little charge
+  for a while after the supply is switched off, which doesn't matter.
 - **Move probes and wires only with the DC lead out.** A probe that slips on a live
   terminal can short two lines.
 - **The scope's ground clips go only on pin 2, the red wire.** A mains-powered
