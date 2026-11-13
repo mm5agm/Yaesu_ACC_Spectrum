@@ -160,8 +160,9 @@ the YWC pre-releases from v2.5.5-pre1. Close ACC Spectrum Viewer first, because
 only one program can have the board's port.
 
 In YWC, with the radio model set to FTdx101MP or FTdx101D and saved, go to
-**Settings → SDR Spectrum Display**, press **Scan**, and choose **ACC scope, Main**
-for VFO A and **ACC scope, Sub** for VFO B. Save. The rest, including Refine,
+**Settings → SDR Spectrum Display**, press **Scan**, then open the
+**VFO A SDR** list and choose **ACC scope, Main**, and in the **VFO B SDR** list
+choose **ACC scope, Sub**. Save. The rest, including Refine,
 is in the YWC manual under
 [FTdx101: the radio's own scope from its ACC socket](https://github.com/mm5agm/Yaesu_Web_Control/blob/v2.5.5-pre1/USER_MANUAL.md#ftdx101-the-radios-own-scope-from-its-acc-socket-experimental).
 
