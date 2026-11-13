@@ -88,7 +88,9 @@ jobs:
           Compress-Archive -Path "$($folder.FullName)/*" -DestinationPath $zip
           gh release view $tag 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag $zip --title "ACC Spectrum Viewer $version" --notes "See viewer/README.md for what it does and how to flash safely." --prerelease
+            # A version with a hyphen (1.1.0-pre1) is a pre-release; a plain one is a full release.
+            $pre = if ($version -like '*-*') { '--prerelease' } else { '--latest' }
+            gh release create $tag $zip --title "ACC Spectrum Viewer $version" --notes "See docs/setup-guide.md to build the board, and viewer/README.md for what the viewer does and how to flash safely." $pre
           } else {
             gh release upload $tag $zip --clobber
           }

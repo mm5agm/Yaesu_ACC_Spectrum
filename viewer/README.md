@@ -5,6 +5,9 @@ from the ACC socket and checks the wiring. Its zip also has **ACC Firmware
 Flasher**, a separate small program that writes the firmware to the ESP32-S3.
 You don't need PlatformIO or Python for either.
 
+To build the board and wire it to the radio, follow the
+[setup guide](../docs/setup-guide.md).
+
 It's also the first real user of the [YaesuAccScope library](../library/README.md):
 everything it knows about the board and the frames comes from there.
 
