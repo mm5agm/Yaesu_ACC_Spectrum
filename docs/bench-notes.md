@@ -131,3 +131,22 @@ out. Both of the board's sockets plugged into the PC: COM (COM5) and USB (COM6,
 | First build, SPI mode 3 | The board counted every frame, but the PC got about 1 packet in 9: the USB send buffer was too small and partial packets went out. Fixed in the firmware. |
 | Fixed build, SPI mode 3 | 26 frames/s, all 4096 bytes. Data ends at byte 3101 or 3102, changing between frames; fixed bytes differ by single bits. Wrong edge. |
 | Fixed build, SPI mode 2 | 25.0 frames/s once the first half second is skipped, no sequence gaps, all 4096 bytes. Data ends at byte 3102 in every frame and the fixed bytes are identical. No `FF 01 EE 01` trailer. LED pulsing green once a second. |
+
+## Two and three probes
+
+2026-11-13. The same scope, now at 200 MHz, probes at 10X, stacked at 2 V/div. I
+read the scope over SCPI and checked each capture before saving. Link on.
+
+| Trace | ESP32 | Result |
+|---|---|---|
+| CNT TX and CS from power-on, 500 ms/div | Out | CS high 0.47 s before the first heartbeat. Heartbeat every 1.000 s. The first CS low comes on the second heartbeat, 1.000 s after the first, then every 40.0 ms. Both idle at about 3.3 V. |
+| CS and CLOCK, 2 us/div | Out | First clock rise 4.07 us after CS falls. Bursts of 8 at 1.95 MHz, 8.9 to 9.0 us apart. CS 3.24 V to 0 V. Clock 3.84 V to -0.64 V. The clock rests low before CS falls and between bytes. |
+| CS, CLOCK and DATA2, 2 us/div | Out | First clock 4.07 us after CS. First bytes 0xB1 0x90, read on the rising edge, MSB first. CS high 3.32 V. Clock 3.84 V to -0.64 V. DATA2 3.60 V to -0.32 V. |
+| CS, CLOCK and DATA2, 2 us/div | In | First clock 4.03 us after CS. 1.97 MHz. First bytes 0xBF 0xD2. CS high 3.24 V. Clock 3.84 V to -0.48 V. DATA2 peak 3.60 V. |
+
+The levels match 2026-11-10. New: on 2026-11-10, with no link, the clock idled
+high at 3.32 V, but while the radio streams it rests low between bytes. Mode 2
+decodes it correctly, as in [First frames](#first-frames).
+
+Two retakes: one with probe 1 on terminal 14 (DATA1) instead of 13, and one with
+probe 1's switch knocked to 1X, which made CS read over 12 V.

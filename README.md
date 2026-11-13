@@ -438,7 +438,8 @@ scope over its LAN port with [tools/scope_shot.py](tools/scope_shot.py). The
 pictures are in [docs/images/scope/](docs/images/scope/), the samples behind them
 in [captures/scope/](captures/scope/), and the measured numbers in the Levels table
 in [docs/bench-notes.md](docs/bench-notes.md). In every picture the bottom
-graticule line is 0 V and each division up is 1 V.
+graticule line is 0 V and each division up is 1 V, except in
+[Two and three probes at once](#two-and-three-probes-at-once).
 
 **Pin numbers are ACC socket pins.** The probe goes on the breakout board's
 terminal for that pin, shown in brackets, at the free end of the pin's 470 ohm
@@ -572,18 +573,53 @@ low, 0 to 3.32 V.
 
 ![ACC pin 3 at 10 ms/div, ESP32 in: high, with frame-shaped ripple.](docs/images/scope/acc-pin3-data1_esp32-in-long-lead_10ms_2026-11-10_1635.png)
 
-### Still to take
+### Two and three probes at once
 
-These need two or three probes at once. Pins 11 and 12 aren't probed together:
+Taken on 2026-11-13. These show how the lines line up with each other, so the
+channels are stacked instead of all starting at the bottom line: 2 V/div, with
+C1 (yellow) at the top, C2 (pink) below it and C3 (blue) at the bottom. The arrow
+on the left of each trace marks its 0 V. Pins 11 and 12 aren't probed together:
 the link joins terminals 39 and 38, so both probes would be on the same point and
 show the same trace.
 
-| Trace | Probes: ACC pin (terminal) | Timebase | Command, after `python tools/scope_shot.py` |
-|---|---|---|---|
-| The data starting after power-on | C1: 12 (38), C2: 6 (13) | 500 ms/div | `--acc C1=12 C2=6 --note link-start` |
-| The start of one frame | C1: 6 (13), C2: 5 (10) | 2 us/div | `--acc C1=6 C2=5 --note link-frame-start` |
-| The first bytes of a frame | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note link-first-bytes --samples C1 C2 C3` |
-| Stage 2: the first bytes at the ESP32 | C1: 6 (13), C2: 5 (10), C3: 4 (11) | 2 us/div | `--acc C1=6 C2=5 C3=4 --note esp32-first-bytes --samples C1 C2 C3` |
+**The data starting after power-on.** C1 on ACC pin 12 (terminal 38), CNT TX, and
+C2 on ACC pin 6 (terminal 13), CS. ESP32 out, link on. The scope was armed with
+the radio off and triggered on the first heartbeat after switching on. CS goes
+high about 0.47 s before that first heartbeat. The heartbeat then comes once a
+second, and the frames start on the second one, exactly 1.0 s after the first:
+the radio needs one heartbeat to come back before it streams. From there CS goes
+low every 40.0 ms. Both lines idle at about 3.3 V.
+
+![ACC pins 12 and 6 at 500 ms/div from power-on: the heartbeat once a second on top, and CS starting its 25 Hz frames at the second heartbeat.](docs/images/scope/acc-pin12-cnt-tx_acc-pin6-cs_link-start_500ms_2026-11-13_1459.png)
+
+**The start of one frame.** C1 on ACC pin 6 (terminal 13), CS, and C2 on ACC pin 5
+(terminal 10), CLOCK. ESP32 out, link on. The first clock edge comes 4.07 us after
+CS falls, then a burst of 8 clocks at 1.95 MHz every 9.0 us. CS goes from 3.24 V to
+0 V. The clock swings 3.84 V to -0.64 V with its ringing. While the radio streams,
+the clock rests low between bytes and before CS falls. With no link on 2026-11-10
+it sat high at 3.32 V. SPI mode 2, which the firmware uses, reads it correctly.
+
+![ACC pins 6 and 5 at 2 us/div: CS falls, and about 4 us later the first burst of 8 clocks, then one every 9 us.](docs/images/scope/acc-pin6-cs_acc-pin5-clk_link-frame-start_2us_2026-11-13_1457.png)
+
+**The first bytes of a frame.** C1 CS, C2 CLOCK and C3 on ACC pin 4 (terminal 11),
+DATA2. ESP32 out, link on. The first clock comes 4.07 us after CS falls, at
+1.95 MHz. Read on the rising clock edges, most significant bit first, the first two
+bytes are 0xB1 and 0x90. They're the first two points of Main's scope row, so they
+change from frame to frame. DATA2 swings 3.60 V to -0.32 V, and CS is high at
+3.32 V.
+
+![ACC pins 6, 5 and 4 at 2 us/div, ESP32 out: CS falls, then two bytes of data clocked out.](docs/images/scope/acc-pin6-cs_acc-pin5-clk_acc-pin4-data2_link-first-bytes_2us_2026-11-13_1147.png)
+
+**Stage 2: the first bytes at the ESP32.** The same three probes with the ESP32 in
+and running the firmware. The first clock comes 4.03 us after CS falls, at
+1.97 MHz, a byte every 8.9 to 9.0 us. The first two bytes are 0xBF and 0xD2. CS is
+high at 3.24 V, the clock swings 3.84 V to -0.48 V, and DATA2 peaks at 3.60 V: the
+same as with the ESP32 out.
+
+![ACC pins 6, 5 and 4 at 2 us/div, ESP32 in: the same as without it.](docs/images/scope/acc-pin6-cs_acc-pin5-clk_acc-pin4-data2_esp32-first-bytes_2us_2026-11-13_1141.png)
+
+The samples behind these four are in [captures/scope/](captures/scope/), one file
+per channel.
 
 ## Comparing with my RSP1 and RSP1B
 
