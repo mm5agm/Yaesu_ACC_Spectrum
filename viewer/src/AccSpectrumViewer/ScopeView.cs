@@ -32,6 +32,9 @@ internal sealed class ScopeView : Control
     private readonly Brush _scaleBrush = new SolidBrush(Color.FromArgb(0x88, 0xAA, 0xAA));
     private readonly Brush _edgeBrush = new SolidBrush(Color.FromArgb(0x55, 0x66, 0x66));
     private readonly Font _titleFont;
+
+    /// <summary>Shown after the title: the span, centre and frequency are changed on the radio, not here.</summary>
+    internal const string SetOnRadioHint = "Change span and frequency on the radio";
     private readonly Font _scaleFont;
     private ColourStretch? _stretch;
     private double? _traceTop;
@@ -150,6 +153,15 @@ internal sealed class ScopeView : Control
         }
         if (_message != null) text += "    " + _message;
         TextRenderer.DrawText(g, text, _titleFont, new Point(4, 3), ForeColor, TextFormatFlags.NoPrefix);
+
+        // The viewer only shows what the radio sends, so people looking for a
+        // span or frequency control here are told where it is.
+        if (s != null && s.IsValid)
+        {
+            int x = 4 + TextRenderer.MeasureText(g, text, _titleFont, Size.Empty, TextFormatFlags.NoPrefix).Width + 16;
+            TextRenderer.DrawText(g, SetOnRadioHint, Font, new Point(x, 3 + (_titleFont.Height - Font.Height) / 2),
+                Color.Gray, TextFormatFlags.NoPrefix);
+        }
     }
 
     // x of a point's middle, across a rectangle.

@@ -49,6 +49,10 @@ internal sealed class MainForm : Form
         var tips = _tips;
         tips.SetToolTip(_pause, "Freeze the display (Space)");
         tips.SetToolTip(_dss, "Show the last 40 traces in perspective, like the radio's 3DSS (D)");
+        const string followsRadio = "This shows what the radio's own scope is set to. To change the span, Center or Fixed, " +
+            "or the frequency, change them on the radio and the viewer follows.";
+        tips.SetToolTip(_main, followsRadio);
+        tips.SetToolTip(_sub, followsRadio);
         _dss.CheckedChanged += (_, _) =>
         {
             _main.Show3dss = _sub.Show3dss = _dss.Checked;
