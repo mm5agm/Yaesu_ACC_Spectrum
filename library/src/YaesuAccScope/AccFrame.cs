@@ -132,7 +132,9 @@ namespace YaesuAccScope
         /// <summary>
         /// The 850 levels, low frequency first, turned the right way up so a
         /// higher number is a stronger signal. The radio sends each byte inverted.
-        /// The dB scale isn't known yet.
+        /// Each step is about 0.42 dB (measured with the radio's attenuator,
+        /// within about 10%), with no absolute zero: the radio's scope LEVEL
+        /// shifts them, and too low a LEVEL puts the floor on 0 or 1.
         /// </summary>
         public byte[] Levels
         {

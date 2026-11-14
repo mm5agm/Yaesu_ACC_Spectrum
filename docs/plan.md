@@ -471,6 +471,10 @@ Rules for my own firmware:
    Write the results in a table in the README, one row per measurement, with a
    column each for the ACC, the RSP1B and the RSP1.
 
+   **Done 2026-11-14:** [comparison.md](comparison.md), with a short table in the
+   README. The latency check used the FT8 cycle instead of retuning, and there
+   was no signal generator, so strong-next-to-weak wasn't tested.
+
 ## Open questions
 
 - ~~Logic levels on the ACC pins.~~ Measured 2026-11-10: all 3.3 to 3.4 V. See

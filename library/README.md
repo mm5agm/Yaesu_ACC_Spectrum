@@ -108,8 +108,9 @@ Not tested yet:
 - **Sub's audio scope.** I've placed it from where the bytes change (AF-FFT in
   bytes 2300-2499, oscilloscope in 2500-2899), not from a tone in Sub's
   passband.
-- **The dB scale of the levels.** It's the radio's display data after its own
-  scaling.
+- **The exact dB scale of the levels.** Measured at about 0.42 dB a step (±10%)
+  on 2026-11-14, with no absolute zero: they're the radio's display data after
+  its scope LEVEL. See [docs/comparison.md](../docs/comparison.md).
 - **Anything while the radio transmits.** Nothing here transmits.
 - **The FTdx101D.** It should be the same, but I've only got the MP.
 
