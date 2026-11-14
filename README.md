@@ -26,7 +26,8 @@ layout is written down in [docs/protocol.md](docs/protocol.md). The
 [YaesuAccScope library](library/README.md), on nuget.org, reads the board for
 any .NET program. Its `ScopeRefiner` averages the last few frames into a refined
 trace, so the floor settles and weak signals stand out about as clearly as on an
-SDR on the IF output. YWC shows the ACC scope in its spectrum panels from
+SDR on the IF output at the 5 kHz, 20 kHz and 1 MHz spans I measured; at
+100 kHz an SDR is clearly better ([the comparison](docs/comparison.md)). YWC shows the ACC scope in its spectrum panels from
 [v2.5.5-pre1](https://github.com/mm5agm/Yaesu_Web_Control/releases/tag/v2.5.5-pre1).
 Every line's levels are checked in [Oscilloscope traces](#oscilloscope-traces).
 The plan it followed is in [docs/plan.md](docs/plan.md).
@@ -627,20 +628,34 @@ per channel.
 
 ## Comparing with my RSP1 and RSP1B
 
-My FTdx101MP already feeds two SDRplay receivers from its 9 MHz IF outputs: the
-RSP1B on VFO A's and the original RSP1 on VFO B's. YWC shows both. Once the ACC
-data gives a spectrum, I'll put it side by side with them: the same signals, at the
-same moment, with the same centre and span. That shows what the ACC route gives
-and what it loses compared with an SDR on the IF, for anyone choosing between
-them. It's receive-only, like everything else here.
+My FTdx101MP also feeds two SDRplay receivers from its IF outputs: the RSP1B on
+Main's and the original RSP1 on Sub's. On 2026-11-14 I recorded all three at the
+same moment, receive only, and measured them the same way. The full write-up,
+with pictures, the method and what it doesn't cover, is in
+[docs/comparison.md](docs/comparison.md). The short version:
 
-A first figure, on 20m FT8 at a 20 kHz span on 2026-11-12: how far the
-strongest signals stand over the roughness of the noise floor. The raw ACC rows
-gave 8.8 on Main. With the library's `ScopeRefiner` that rose to 21.5. The
-RSP1B gave 22.9 and the RSP1 gave 21.7, as YWC draws them.
+| | ACC scope | RSP1 | RSP1B |
+|---|---|---|---|
+| Spans | 1 kHz to 1 MHz, the radio's ten | 1 kHz to 2 MHz | 1 kHz to 2 MHz |
+| Points across the span | Always 791 | 131 to 2048, by span | 131 to 2048, by span |
+| Width of a carrier at a 1 kHz span | 2.5 Hz | 15.3 Hz | 15.3 Hz |
+| Clarity, 20 kHz span (Refine 0 / 3 / 5 for the ACC) | 7.7 / 15.9 / 23.3 | 16.2 | 15.8 |
+| Clarity, 100 kHz span | 8.5 / 16.0 / 21.8 | 25.8 | 27.1 |
+| Clarity, 1 MHz span | 8.6 / 16.2 / 20.6 | 17.9 | 17.5 |
+| Frames a second | 25 | 10.4 as YWC sends them | 10.4 as YWC sends them |
+| Level steps | 256, about 0.42 dB each | 12-bit ADC | 14-bit ADC |
+| Needs | The board on the ACC socket | IF output, SDR, SDRplay driver | The same |
 
-The method and the results table are in step 7 of [docs/plan.md](docs/plan.md).
-The pictures go in [docs/images/compare/](docs/images/compare/).
+Clarity is how far the strongest signal stands above the floor, divided by how
+rough the floor is; bigger is better. At YWC's default Refine 3 the ACC scope
+matched the SDRs at 5 kHz, 20 kHz and 1 MHz, and is far sharper at the narrowest
+spans. Spans I didn't measure (2, 10, 50, 200 and 500 kHz) aren't claimed. At 100 kHz the SDRs are clearly better, and only they go past
+1 MHz. The raw rows, without Refine, are well behind. Keep the radio's scope
+LEVEL at +10 or above, or the floor sits on the bottom step and weak signals
+are lost. I saw no difference between the RSP1 and RSP1B.
+
+These figures replace a first one from 2026-11-12 (8.8 raw, 21.5 refined, 22.9
+and 21.7 for the SDRs), which measured clarity a different way.
 
 ## Credits and background
 

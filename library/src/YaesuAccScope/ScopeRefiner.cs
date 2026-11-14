@@ -16,11 +16,12 @@ namespace YaesuAccScope
     /// Each frame the radio sends is a separate snapshot: its scope speed setting
     /// only changes how fast its own waterfall scrolls, not the data. So one
     /// frame has a rough floor, and averaging frames smooths it. Measured on 20m
-    /// FT8 at a 20 kHz span on 2026-11-12, the default weight took the ratio of
-    /// the strongest signals to the roughness of the floor from 8.8 to 21.5 on
-    /// Main (8.5 to 20.5 on Sub). SDRplay RSPs on the radio's IF outputs, as Yaesu
-    /// Web Control draws them, gave 22.9 (RSP1B) and 21.7 (RSP1). The refined
-    /// trace still comes 25 times a second.
+    /// FT8 at a 20 kHz span on 2026-11-14, the default weight took the ratio of
+    /// the strongest signal to the roughness of the floor from 7.7 to 15.9.
+    /// SDRplay RSPs on the radio's IF outputs, as Yaesu Web Control draws them,
+    /// gave 15.8 (RSP1B) and 16.2 (RSP1). At a 100 kHz span the RSPs were
+    /// clearly ahead (about 26 against 16). The refined trace still comes 25
+    /// times a second. Details in docs/comparison.md in the repository.
     /// </para>
     /// <para>
     /// The raw rows are still there in <see cref="ReceiverScope.Levels"/>. Use

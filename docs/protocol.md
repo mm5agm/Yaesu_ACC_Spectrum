@@ -62,7 +62,10 @@ All frequencies are in Hz. "BE" means 4 bytes, big-endian.
 | 850-1699 | Sub's, the same |
 
 Each byte is inverted: subtract it from 255 to get a level where higher is
-stronger. The dB scale isn't known yet.
+stronger. Each step is about 0.42 dB, measured with the radio's attenuator
+(within about 10%; see [comparison.md](comparison.md)). There's no absolute
+zero: the radio's scope LEVEL shifts the rows by about 2.2 steps per dB, and
+at LEVEL 0 or below the floor starts to sit on 0 or 1.
 
 ### Where each row sits
 
@@ -126,5 +129,7 @@ worked out.
 ## Not known
 
 - What the frames do while the radio transmits. Nothing here transmits.
-- The dB scale of the levels.
+- The exact dB scale, and whether it is quite straight near the bottom: the
+  floor moved a little less than a strong carrier when the attenuator was
+  switched.
 - Whether the FTdx101D sends the same. It should, but I've only got the MP.
