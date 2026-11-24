@@ -57,6 +57,10 @@ network can open it: a phone, a tablet or another PC.
   gives, such as `wifi 192.168.1.20`. The page shows the scope and waterfall
   with the frequency scale, and the audio scope with its attenuators and
   timebase, for Main and, on an FTdx101, Sub. It tells the FTDX10 from the FTdx101 the same way the library does.
+  **Pause** (Space) freezes it, **Audio** (A) shows or hides the audio scopes,
+  and **Peak** (P) keeps each point's peak as a fainter blue trace that fades
+  slowly, so a signal that came and went can still be seen. The browser
+  remembers whether Peak was on.
 - **To change the network,** hold BOOT for 3 seconds while the board is
   running. The setup network comes up for 10 minutes, and the board stays on
   the saved network meanwhile. (Not at power-on: BOOT is a strapping pin, so

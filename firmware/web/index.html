@@ -42,6 +42,7 @@ footer{padding:4px 10px;font-size:12px;color:var(--dim);border-top:1px solid var
   <span id="fps"></span>
   <button id="pause" aria-pressed="false" title="Freeze the display (Space)">Pause</button>
   <button id="audio" aria-pressed="true" title="Show the audio scopes (A)">Audio</button>
+  <button id="peak" aria-pressed="false" title="Keep each point's peak as a fainter trace that fades slowly (P)">Peak</button>
 </header>
 <div id="grid">
   <section class="panel" id="p-main"><h2>Main <span class="info"></span></h2><div class="scale"></div><canvas class="trace"></canvas><canvas class="fall"></canvas></section>
@@ -122,6 +123,7 @@ class Panel {
     this.info = el.querySelector(".info"); this.scale = el.querySelector(".scale");
     this.trace = el.querySelector(".trace"); this.fall = el.querySelector(".fall");
     this.avg = null; this.key = ""; this.low = null; this.high = null; this.top = null;
+    this.peak = null;   // the peak-hold trace, while the Peak button is on
     this.fall.width = width; this.fall.height = 200;
     this.fctx = this.fall.getContext("2d"); this.fctx.fillStyle = "#000"; this.fctx.fillRect(0, 0, width, 200);
     this.row = this.fctx.createImageData(width, 1);
@@ -129,8 +131,20 @@ class Panel {
   add(levels, key) {
     // Average the last few rows, as the library's ScopeRefiner does, so the
     // floor settles and weak signals stand out. A new span or band starts again.
-    if (!this.avg || key !== this.key) { this.avg = Float32Array.from(levels); this.key = key; this.low = null; }
+    const fresh = !this.avg || key !== this.key;
+    if (fresh) { this.avg = Float32Array.from(levels); this.key = key; this.low = null; }
     else for (let i = 0; i < levels.length; i++) this.avg[i] += 0.3 * (levels[i] - this.avg[i]);
+    // Peak hold: each point keeps the highest the trace reached, falling
+    // PEAK_FALL a frame (about 5 steps a second), so a signal that went leaves
+    // a fading memory. It follows the averaged trace rather than the raw rows,
+    // so the noise's own spikes don't pile up into it. A new span or band
+    // starts it again.
+    if (peakOn) {
+      if (fresh || !this.peak) this.peak = Float32Array.from(this.avg);
+      else for (let i = 0; i < this.avg.length; i++) this.peak[i] = Math.max(this.avg[i], this.peak[i] - PEAK_FALL);
+    } else {
+      this.peak = null;
+    }
     const vis = this.avg.subarray(this.first);
     const lo = median(vis), hi = Math.max(...vis);
     if (this.low === null) { this.low = lo; this.high = Math.max(hi, lo + 20); this.top = hi; }
@@ -154,13 +168,23 @@ class Panel {
     g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
     if (!this.avg) return;
     const vis = this.avg.subarray(this.first), n = vis.length;
-    const bottom = this.low - 6, span = Math.max(20, this.top + 6 - bottom);
+    const held = this.peak ? this.peak.subarray(this.first) : null;
+    const top = held ? Math.max(this.top, Math.max(...held)) : this.top;
+    const bottom = this.low - 6, span = Math.max(20, top + 6 - bottom);
     g.strokeStyle = "#222"; g.lineWidth = 1;
     for (const m of marks) { const x = m.x * w; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
     for (let k = 1; k < 4; k++) { const y = h * k / 4; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
     if (vfoX !== null && vfoX >= 0 && vfoX <= 1) {
       g.strokeStyle = "#ff4040"; g.setLineDash([5 * dpr, 4 * dpr]);
       g.beginPath(); g.moveTo(vfoX * w, 0); g.lineTo(vfoX * w, h); g.stroke(); g.setLineDash([]);
+    }
+    if (held) {   // under the live trace, fainter
+      g.strokeStyle = "rgba(90,180,255,0.7)"; g.lineWidth = Math.max(1, dpr); g.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = i / (n - 1) * w, y = Math.min(h - 1, h - (held[i] - bottom) / span * h);
+        if (i) g.lineTo(x, y); else g.moveTo(x, y);
+      }
+      g.stroke();
     }
     g.strokeStyle = "#ffd21a"; g.lineWidth = Math.max(1, dpr); g.beginPath();
     for (let i = 0; i < n; i++) {
@@ -198,6 +222,8 @@ const panels = {
 };
 panels.mainA.setScale(audioMarks); panels.subA.setScale(audioMarks);
 
+const PEAK_FALL = 0.2;
+let peakOn = false;
 let latest = null, paused = false, frames = 0, shown = { radio: "", hasSub: true };
 
 function showScope(panel, rx) {
@@ -264,9 +290,15 @@ document.getElementById("audio").onclick = () => {
   const on = document.getElementById("audio").getAttribute("aria-pressed") !== "true";
   toggle("audio", on); document.getElementById("grid").classList.toggle("noaudio", !on);
 };
+document.getElementById("peak").onclick = () => {
+  peakOn = toggle("peak", !peakOn);
+  try { localStorage.setItem("accScopePeak", peakOn ? "1" : "0"); } catch (e) { /* not kept */ }
+};
+try { if (localStorage.getItem("accScopePeak") === "1") document.getElementById("peak").click(); } catch (e) { /* off */ }
 document.addEventListener("keydown", e => {
   if (e.key === " ") { e.preventDefault(); document.getElementById("pause").click(); }
   else if (e.key === "a" || e.key === "A") document.getElementById("audio").click();
+  else if (e.key === "p" || e.key === "P") document.getElementById("peak").click();
 });
 </script>
 </body>
